@@ -112,7 +112,7 @@ class Integrations():
     
     def create_custom_api_integration(self, name, url, method, description="", headers=None, 
                                       body_type=None, body_content=None, body_params=None, 
-                                      query_params=None):
+                                      query_params=None , stop_listening=False, request_timeout=10 ):
         """
         Create a custom API integration.
         
@@ -195,7 +195,9 @@ class Integrations():
             "url": url,
             "method": method,
             "description": description,
-            "integration_type": "custom_api"
+            "integration_type": "custom_api",
+            "stop_listening": stop_listening,
+            "request_timeout": request_timeout
         }
         
         # Add optional fields if provided

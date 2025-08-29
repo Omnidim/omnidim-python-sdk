@@ -43,7 +43,7 @@ class Call():
         return self.client.post("calls/dispatch", data=data)
     
 
-    def get_call_logs(self, page=1, page_size=30, agent_id=None):
+    def get_call_logs(self, page=1, page_size=30, agent_id=None, call_status=None):
         """
         Get all call logs for the authenticated user.
         
@@ -51,6 +51,7 @@ class Call():
             page (int): Page number for pagination (default: 1).
             page_size (int): Number of items per page (default: 30).
             agent_id (int): Filter by agent ID (optional).
+            call_status (string): Filter by call status (optional).
         Returns:
             dict: Response containing the list of call logs .
         """
@@ -58,6 +59,7 @@ class Call():
             'pageno': page,
             'pagesize': page_size,
             'agentid': agent_id,
+            'call_status': call_status,
         }
         return self.client.get("calls/logs", params=params)
     

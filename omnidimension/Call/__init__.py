@@ -28,6 +28,8 @@ class Call():
         # Validate required inputs
         if not isinstance(agent_id, int):
             raise ValueError("agent id must be a integer.")
+        if not isinstance(from_number_id, int):
+            raise ValueError("from number id must be a integer.")
         if not isinstance(to_number, str) and to_number[0] != '+':
             raise ValueError("To Number must be a valid number and starts with + and country code.")            
         

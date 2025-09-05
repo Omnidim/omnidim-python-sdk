@@ -27,6 +27,7 @@ class Client(object):
         print(self.base_url)
         # Lazy-loaded domain clients
         self._agent = None
+        self._bulk_call = None
         self._call = None
         self._integrations = None
         self._knowledge_base = None
@@ -143,6 +144,14 @@ class Client(object):
             from .Agent import Agent
             self._agent = Agent(self)
         return self._agent
+
+    @property
+    def bulk_call(self):
+        """Get the BulkCall client."""
+        if self._bulk_call is None:
+            from .BulkCall import BulkCall
+            self._bulk_call = BulkCall(self)
+        return self._bulk_call
 
     @property
     def call(self):

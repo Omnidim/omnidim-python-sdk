@@ -467,12 +467,139 @@ def detach_phone_number(phone_number_id):
     response = client.phone_number.detach(phone_number_id)
     return print_json_response(response, f"Detaching phone number (ID: {phone_number_id})")
 
+# ===== Bulk Call Operations =====
+
+def run_bulk_call_examples():
+    """Run examples for bulk call operations"""
+    print("\n===== RUNNING BULK CALL EXAMPLES =====\n")
+    
+    # Fetch all bulk calls
+    bulk_calls = fetch_bulk_calls()
+    
+    # Get phone number ID for bulk calls
+    phone_numbers = list_phone_numbers()
+    phone_number_id = None
+    if phone_numbers.get('phone_numbers') and len(phone_numbers['phone_numbers']) > 0:
+        phone_number_id = phone_numbers['phone_numbers'][0]['id']
+        print(f"Using phone number ID: {phone_number_id}")
+    else:
+        print("No phone numbers found. Please add a phone number first.")
+        return
+    
+    # Create a bulk call campaign
+    contact_list = [
+        {
+            "phone_number": "+1234567890",
+            "customer_name": "John Doe",
+            "product_interest": "Premium Plan"
+        },
+        {
+            "phone_number": "+1987654321", 
+            "customer_name": "Jane Smith",
+            "product_interest": "Basic Plan"
+        }
+    ]
+    
+    # Create immediate bulk call
+    bulk_call_data = create_bulk_calls(
+        name="Marketing Campaign - Q4 2024",
+        contact_list=contact_list,
+        phone_number_id=phone_number_id
+    )
+    
+    bulk_call_id = bulk_call_data.get('id')
+    
+    if bulk_call_id:
+        # Get bulk call details
+        get_bulk_call_details(bulk_call_id)
+        
+        # Pause the bulk call
+        pause_bulk_call(bulk_call_id)
+        
+        # Resume the bulk call
+        resume_bulk_call(bulk_call_id)
+        
+        # Reschedule the bulk call
+        reschedule_bulk_call(bulk_call_id, "2024-12-25 10:00:00", "America/New_York")
+        
+        # Cancel the bulk call
+        cancel_bulk_call(bulk_call_id)
+    
+    # Create a scheduled bulk call
+    scheduled_bulk_call = create_scheduled_bulk_calls(
+        name="Scheduled Campaign - New Year",
+        contact_list=contact_list,
+        phone_number_id=phone_number_id,
+        scheduled_datetime="2024-12-31 09:00:00",
+        timezone="America/New_York"
+    )
+
+def fetch_bulk_calls(page=1, page_size=10, status=None):
+    """Fetch all bulk calls with optional filtering and pagination"""
+    response = client.bulk_call.fetch_bulk_calls(page=page, page_size=page_size, status=status)
+    return print_json_response(response, "Fetching bulk calls")
+
+def create_bulk_calls(name, contact_list, phone_number_id, is_scheduled=False, scheduled_datetime=None, timezone='UTC'):
+    """Create a new bulk call campaign"""
+    response = client.bulk_call.create_bulk_calls(
+        name=name,
+        contact_list=contact_list,
+        phone_number_id=phone_number_id,
+        is_scheduled=is_scheduled,
+        scheduled_datetime=scheduled_datetime,
+        timezone=timezone
+    )
+    return print_json_response(response, f"Creating bulk call: {name}")
+
+def create_scheduled_bulk_calls(name, contact_list, phone_number_id, scheduled_datetime, timezone='UTC'):
+    """Create a scheduled bulk call campaign"""
+    response = client.bulk_call.create_bulk_calls(
+        name=name,
+        contact_list=contact_list,
+        phone_number_id=phone_number_id,
+        is_scheduled=True,
+        scheduled_datetime=scheduled_datetime,
+        timezone=timezone
+    )
+    return print_json_response(response, f"Creating scheduled bulk call: {name}")
+
+def get_bulk_call_details(bulk_call_id):
+    """Get detailed information about a specific bulk call campaign"""
+    response = client.bulk_call.detail_bulk_calls(bulk_call_id)
+    return print_json_response(response, f"Getting bulk call details (ID: {bulk_call_id})")
+
+def pause_bulk_call(bulk_call_id):
+    """Pause a bulk call campaign"""
+    response = client.bulk_call.bulk_calls_actions(bulk_call_id, 'pause')
+    return print_json_response(response, f"Pausing bulk call (ID: {bulk_call_id})")
+
+def resume_bulk_call(bulk_call_id):
+    """Resume a bulk call campaign"""
+    response = client.bulk_call.bulk_calls_actions(bulk_call_id, 'resume')
+    return print_json_response(response, f"Resuming bulk call (ID: {bulk_call_id})")
+
+def reschedule_bulk_call(bulk_call_id, new_scheduled_datetime, new_timezone=None):
+    """Reschedule a bulk call campaign"""
+    response = client.bulk_call.bulk_calls_actions(
+        bulk_call_id, 
+        'reschedule', 
+        new_timezone=new_timezone,
+        new_scheduled_datetime=new_scheduled_datetime
+    )
+    return print_json_response(response, f"Rescheduling bulk call (ID: {bulk_call_id})")
+
+def cancel_bulk_call(bulk_call_id):
+    """Cancel a bulk call campaign"""
+    response = client.bulk_call.cancel_bulk_calls(bulk_call_id)
+    return print_json_response(response, f"Cancelling bulk call (ID: {bulk_call_id})")
+
 
 if __name__ == "__main__":
     # Uncomment the function you want to run
     # run_agent_examples()
     # run_call_log_examples()
     # run_integration_examples()
-    run_knowledge_base_examples()
+    # run_knowledge_base_examples()
     # run_phone_number_examples()
+    run_bulk_call_examples()
 

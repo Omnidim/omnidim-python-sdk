@@ -60,6 +60,10 @@ def run_call_log_examples():
     # Get call logs
     call_logs = get_call_logs()
     
+    # Example: Get call logs filtered by status (uncomment to use)
+    # call_logs_filtered = get_call_logs(call_status="completed")
+    # call_logs_by_agent = get_call_logs(agent_id=123)
+    
     # Get details of the first call log if available
     if call_logs.get('call_log_data') and len(call_logs['call_log_data']) > 0:
         call_log_id = call_logs['call_log_data'][0]['id']
@@ -331,9 +335,9 @@ def delete_agent(agent_id):
 
 # ===== Call Log Operations =====
 
-def get_call_logs(page=1, page_size=10):
-    """Get all call logs with pagination"""
-    response = client.call.get_call_logs(page=page, page_size=page_size)
+def get_call_logs(page=1, page_size=10, agent_id=None, call_status=None):
+    """Get all call logs with pagination and optional filtering"""
+    response = client.call.get_call_logs(page=page, page_size=page_size, agent_id=agent_id, call_status=call_status)
     return print_json_response(response, "Getting call logs")
 
 def get_call_log_details(call_log_id):

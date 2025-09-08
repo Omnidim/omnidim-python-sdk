@@ -176,6 +176,66 @@ client.phone_number.attach(phone_number_id=321, agent_id=123)
 
 ---
 
+## 📞 Bulk Call Management
+
+```python
+# First, get your phone number IDs
+phone_numbers = client.phone_number.list()
+phone_number_id = phone_numbers['phone_numbers'][0]['id']  # Use the first available phone number
+
+# Create a bulk call campaign
+contact_list = [
+    {
+        "phone_number": "+1234567890",
+        "customer_name": "John Doe",
+        "product_interest": "Premium Plan"
+    },
+    {
+        "phone_number": "+1987654321", 
+        "customer_name": "Jane Smith",
+        "product_interest": "Basic Plan"
+    }
+]
+
+# Create immediate bulk call
+bulk_call = client.bulk_call.create_bulk_calls(
+    name="Marketing Campaign - Q4 2024",
+    contact_list=contact_list,
+    phone_number_id=phone_number_id
+)
+
+# Create scheduled bulk call
+scheduled_call = client.bulk_call.create_bulk_calls(
+    name="Scheduled Campaign",
+    contact_list=contact_list,
+    phone_number_id=phone_number_id,
+    is_scheduled=True,
+    scheduled_datetime="2024-12-25 10:00:00",
+    timezone="America/New_York"
+)
+
+# Fetch all bulk calls
+bulk_calls = client.bulk_call.fetch_bulk_calls(page=1, page_size=10, status="active")
+
+# Get bulk call details
+details = client.bulk_call.detail_bulk_calls(bulk_call_id=123)
+
+# Control bulk call actions
+client.bulk_call.bulk_calls_actions(bulk_call_id=123, action="pause")
+client.bulk_call.bulk_calls_actions(bulk_call_id=123, action="resume")
+client.bulk_call.bulk_calls_actions(
+    bulk_call_id=123, 
+    action="reschedule",
+    new_scheduled_datetime="2024-12-26 14:00:00",
+    new_timezone="America/New_York"
+)
+
+# Cancel bulk call
+client.bulk_call.cancel_bulk_calls(bulk_call_id=123)
+```
+
+---
+
 ## 📁 Recommended Project Structure
 
 ```

@@ -136,6 +136,27 @@ To use OmniDimension with MCP clients like Claude Desktop, save the following co
 
 ---
 
+##  📡 Providers API
+
+The Providers API allows you to discover and explore all available AI providers for LLMs, voices, STT, and TTS services.
+
+### Quick Examples
+
+```python
+# Get all LLM providers
+llms = client.providers.list_llms()
+print(f"[SUCCESS] Found {llms['total']} LLM providers")
+
+# List voices with pagination
+voices = client.providers.list_voices(page=1, page_size=50)
+print(f"[SUCCESS] Found {voices['total']} voices")
+```
+
+> ![INFO]
+> **[Complete Providers Documentation](omnidimension/Providers/README.md)**
+
+---
+
 ## 📚 Knowledge Base
 
 ```python

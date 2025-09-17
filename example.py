@@ -240,6 +240,11 @@ def print_json_response(response, title=None):
         print(f"\n=== {title} ===\n")
 
     if isinstance(response, dict):
+        # print status if available
+        status = response.get('status')
+        if status:
+            print(f"Status: {status}")
+
         # handle direct JSON response structure
         if 'json' in response:
             # Old nested structure

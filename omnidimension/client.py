@@ -32,6 +32,7 @@ class Client(object):
         self._integrations = None
         self._knowledge_base = None
         self._phone_number = None
+        self._providers = None
         self._simulation = None
         
         # Verify API key format (basic validation)
@@ -69,7 +70,6 @@ class Client(object):
         
         # Build full URL
         url = self.base_url + '/' + endpoint.lstrip('/')
-        print("->",url, self.base_url, endpoint)
         try:
             # Make the request
             response = requests.request(
@@ -184,6 +184,14 @@ class Client(object):
             from .PhoneNumber import PhoneNumber
             self._phone_number = PhoneNumber(self)
         return self._phone_number
+
+    @property
+    def providers(self):
+        """Get the Providers client."""
+        if self._providers is None:
+            from .Providers import Providers
+            self._providers = Providers(self)
+        return self._providers
 
     @property
     def simulation(self):

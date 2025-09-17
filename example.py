@@ -238,20 +238,22 @@ def print_json_response(response, title=None):
     """Pretty print JSON responses"""
     if title:
         print(f"\n=== {title} ===\n")
-    
+
     if isinstance(response, dict):
-        status = response.get('status')
-        if status:
-            print(f"Status: {status}")
-        
-        json_data = response.get('json')
-        if json_data:
-            print(json.dumps(json_data, indent=2))
+        # handle direct JSON response structure
+        if 'json' in response:
+            # Old nested structure
+            json_data = response.get('json')
+            if json_data:
+                print(json.dumps(json_data, indent=2))
+            else:
+                print(json.dumps(response, indent=2))
         else:
+            # direct structure
             print(json.dumps(response, indent=2))
     else:
         print(json.dumps(response, indent=2))
-    
+
     return response
 
 # ===== Agent Operations =====
@@ -593,6 +595,171 @@ def cancel_bulk_call(bulk_call_id):
     response = client.bulk_call.cancel_bulk_calls(bulk_call_id)
     return print_json_response(response, f"Cancelling bulk call (ID: {bulk_call_id})")
 
+# ===== Providers Operations =====
+
+
+
+def run_providers_examples():
+    """run examples for providers operations"""
+    print("\n===== RUNNING PROVIDERS EXAMPLES =====\n")
+
+    # List all LLM providers
+    list_all_llms()
+
+    # List all voice providers with pagination
+    list_all_voices()
+
+    # List all STT providers
+    list_all_stt()
+
+    # List all TTS providers
+    list_all_tts()
+
+    # List all providers (comprehensive)
+    list_all_providers()
+
+    # Search ElevenLabs voices with filters
+    search_elevenlabs_voices()
+
+    # Filter voices by criteria
+    filter_voices_by_criteria()
+
+    # Get voice details
+    get_specific_voice_details()
+
+    # Test pagination and iteration
+    test_pagination_iteration()
+
+    # Test error handling
+    test_error_handling_examples()
+    
+    
+    
+def list_all_llms():
+    """List all available LLM providers"""
+    response = client.providers.list_llms()
+    return print_json_response(response, "Listing all LLM providers")
+
+def list_all_voices(page=1, page_size=30):
+    """List all available voice providers with pagination"""
+    response = client.providers.list_voices(page=page, page_size=page_size)
+    return print_json_response(response, f"Listing all voices (page {page}, size {page_size})")
+
+def list_all_stt():
+    """List all available STT providers"""
+    response = client.providers.list_stt()
+    return print_json_response(response, "Listing all STT providers")
+
+def list_all_tts():
+    """List all available TTS providers"""
+    response = client.providers.list_tts()
+    return print_json_response(response, "Listing all TTS providers")
+
+def list_all_providers():
+    """List all providers (comprehensive)"""
+    response = client.providers.list_all()
+    return print_json_response(response, "Listing all providers (comprehensive)")
+
+def search_elevenlabs_voices():
+    """Search ElevenLabs voices with various filters"""
+    print("\n--- Searching ElevenLabs voices by search term ---")
+    response = client.providers.list_voices(provider='eleven_labs', search='excited', gender='male', page_size=10)
+    print_json_response(response, "ElevenLabs excited male voices")
+
+    print("\n--- Searching ElevenLabs voices by language ---")
+    response = client.providers.list_voices(provider='eleven_labs', language='en', page_size=10)
+    print_json_response(response, "ElevenLabs English voices")
+
+    print("\n--- Searching ElevenLabs voices by accent ---")
+    response = client.providers.list_voices(provider='eleven_labs', accent='american', gender='female', page_size=10)
+    print_json_response(response, "ElevenLabs American female voices")
+
+def filter_voices_by_criteria():
+    """Demonstrate various voice filtering options"""
+    print("\n--- Filtering voices by provider ---")
+    response = client.providers.list_voices(provider='eleven_labs', page_size=20)
+    print_json_response(response, "ElevenLabs voices only")
+
+    print("\n--- Combined filters ---")
+    response = client.providers.list_voices(
+        provider='eleven_labs',
+        search='professional',
+        language='en',
+        accent='british',
+        gender='male',
+        page_size=15
+    )
+    print_json_response(response, "ElevenLabs professional British male voices")
+
+def get_specific_voice_details():
+    """Get details of a specific voice"""
+    # first get some voices to pick an ID from
+    
+    voices_response = client.providers.list_voices(page_size=5)
+    if voices_response.get('voices') and len(voices_response['voices']) > 0:
+        voice_id = voices_response['voices'][0]['id']
+        print(f"\n--- Getting details for voice ID: {voice_id} ---")
+        response = client.providers.get_voice(voice_id)
+        print_json_response(response, f"Voice details for ID {voice_id}")
+    else:
+        print("No voices found to get details for.")
+
+def test_pagination_iteration():
+    """test pagination and iteration"""
+    print("\n--- Testing pagination and iteration ---")
+
+    print("\n--- Manual pagination ---")
+    page = 1
+    total_voices = 0
+    while total_voices < 10 and page <= 3:  # limit to 3 pages for demo
+        response = client.providers.list_voices(page=page, page_size=3)
+        voices = response.get('voices', [])
+        print(f"Page {page}: {len(voices)} voices")
+        total_voices += len(voices)
+        page += 1
+
+    print(f"\n--- Total voices retrieved: {total_voices} ---")
+
+def test_error_handling_examples():
+    """test error handling and edge cases"""
+    print("\n--- Testing error handling ---")
+
+    print("\n--- Testing invalid parameters ---")
+    try:
+        client.providers.list_voices(page=0)
+    except ValueError as e:
+        print(f"[ERROR] Invalid page handled: {e}")
+
+    try:
+        client.providers.list_voices(page_size=150)
+    except ValueError as e:
+        print(f"[ERROR] Invalid page_size handled: {e}")
+
+    try:
+        client.providers.list_voices(provider='eleven_labs', gender='invalid')
+    except ValueError as e:
+        print(f"[ERROR] Invalid gender handled: {e}")
+
+    print("\n--- Testing unsupported filters on non-ElevenLabs provider ---")
+    try:
+        client.providers.list_voices(provider='google', search='test')
+    except ValueError as e:
+        print(f"[ERROR] Unsupported filter handled: {e}")
+
+    print("\n--- Testing rate limiting ---")
+    try:
+        # make several rapid requests to potentially trigger rate limiting
+        for i in range(5):
+            response = client.providers.list_voices(provider='eleven_labs', page_size=1)
+            print(f"[INFO] Request {i+1}: Success")
+    except ValueError as e:
+        if 'Rate limit exceeded' in str(e):
+            print(f"[INFO] Rate limiting working: {e}")
+        else:
+            print(f"[ERROR] Unexpected error: {e}")
+    except Exception as e:
+        print(f"[ERROR] Error: {e}")
+
 
 if __name__ == "__main__":
     # Uncomment the function you want to run
@@ -601,5 +768,6 @@ if __name__ == "__main__":
     # run_integration_examples()
     # run_knowledge_base_examples()
     # run_phone_number_examples()
-    run_bulk_call_examples()
+    # run_bulk_call_examples()
+    run_providers_examples()
 

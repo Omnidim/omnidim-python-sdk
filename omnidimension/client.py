@@ -24,6 +24,7 @@ class Client(object):
         
         self.api_key = api_key
         self.base_url = base_url.rstrip('/')
+        print(self.base_url)
         # Lazy-loaded domain clients
         self._agent = None
         self._bulk_call = None

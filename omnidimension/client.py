@@ -11,7 +11,7 @@ class APIError(Exception):
         super().__init__(f"API Error ({status_code}): {message}")
 
 class Client(object):
-    def __init__(self, api_key, base_url='http://localhost:8069/api/v1'):
+    def __init__(self, api_key, base_url='https://backend.omnidim.io/api/v1'):
         """
         Initialize the OmniClient with API key and base URL.
 

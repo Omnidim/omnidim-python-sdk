@@ -29,8 +29,9 @@ class BulkCall():
             
         return self.client.get("calls/bulk_call", params=params)
 
-    def create_bulk_calls(self, name, contact_list, phone_number_id, 
-                         is_scheduled=False, scheduled_datetime=None, timezone='UTC'):
+    def create_bulk_calls(self, name, contact_list, phone_number_id,
+                         is_scheduled=False, scheduled_datetime=None, timezone='UTC',
+                         retry_config=None, enabled_reschedule_call=False):
         """
         Create a new bulk call campaign.
         
@@ -41,10 +42,12 @@ class BulkCall():
             is_scheduled (bool): Whether the call is scheduled for later (default: False).
             scheduled_datetime (str): Scheduled datetime in format "YYYY-MM-DD HH:MM:SS" (required if is_scheduled=True).
             timezone (str): Timezone for the scheduled datetime (default: 'UTC').
-            
+            retry_config (dict): Auto-retry configuration with keys: auto_retry, auto_retry_schedule, retry_schedule_days, retry_schedule_hours, retry_limit.
+            enabled_reschedule_call (bool): Enable call rescheduling (default: False).
+
         Returns:
             dict: Response containing the created bulk call details.
-            
+
         Raises:
             ValueError: If required fields are missing or invalid.
         """
@@ -73,12 +76,16 @@ class BulkCall():
             'contact_list': contact_list,
             'phone_number_id': phone_number_id,
             'is_scheduled': is_scheduled,
-            'timezone': timezone
+            'timezone': timezone,
+            'enabled_reschedule_call': enabled_reschedule_call
         }
-        
+
         if is_scheduled:
             data['scheduled_datetime'] = scheduled_datetime
-            
+
+        if retry_config:
+            data['retry_config'] = retry_config
+
         return self.client.post("calls/bulk_call/create", data=data)
 
     def bulk_calls_actions(self, bulk_call_id, action, new_timezone=None, new_scheduled_datetime=None):

@@ -18,6 +18,7 @@ OmniDimension lets you **build, test, and deploy** reliable voice AI assistants 
 - **Knowledge Base support:** Upload and attach documents (PDFs) for factual grounding.
 - **Integrations:** Connect to external APIs, CRMs, or tools like Cal.com.
 - **Phone agents:** Assign numbers and initiate real voice calls via the SDK.
+- **Bulk Call:** Send multiple voice calls AI to multiple numbers simultaneously.
 
 ---
 

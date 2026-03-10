@@ -47,22 +47,48 @@ class Agent():
         Create a custom agent with the provided configuration and optional parameters.
 
         Args:
-            name (str): name for the agent.
-            context_breakdown (list): List of context breakdowns, each containing 'title' and 'body'.
+            name (str): Name for the agent.
+            context_breakdown (list): List of context breakdowns, each containing:
+                - title (str): Title of the section
+                - body (str): Instructions/context for the section
+                - is_enabled (bool): Whether this block is active
             welcome_message (str, optional): The initial message spoken by the agent.
             call_type (str, optional): 'Incoming' or 'Outgoing'.
             is_interruption_allowed (bool, optional): Allow user to interrupt the agent.
             is_welcome_message_dynamic (bool, optional): Generate dynamic welcome message.
             is_welcome_message_interruption (bool, optional): Allow interruption during welcome.
             transcriber (dict, optional): Transcriber configuration.
+                - provider (str): 'whisper', 'deepgram_stream', 'Cartesia', 'Sarvam', 'Azure', 'Soniox'
+                - silence_timeout_ms (int): Silence timeout in ms.
+                - should_apply_noise_reduction (bool): Apply noise reduction.
             model (dict, optional): LLM configuration.
+                - model (str): 'gpt-4o', 'gpt-4o-mini', 'claude-3-5-sonnet-latest', 'gemini-2.5-flash', etc.
+                - temperature (float): LLM temperature.
             voice (dict, optional): Voice configuration.
+                - provider (str): 'deepgram', 'google', 'eleven_labs', 'cartesia', 'playht', 'openAI', 'sarvam', etc.
+                - voice_id (str): Provider-specific voice ID.
+                - speech_speed (float): Speed multiplier.
             web_search (dict, optional): Web search configuration.
-            post_call_actions (dict, optional): Webhook or email actions after the call.
-            filler (dict, optional): Filler sounds configuration.
+                - enabled (bool): Enable live web search.
+                - provider (str): Default 'DuckDuckGo'.
+            post_call_actions (dict, optional): Post call webhooks/emails.
+                - email (dict): {'enabled': bool, 'recipients': list, 'include': ['summary', 'extracted_variables', 'fullConversation', 'sentiment'], 'extracted_variables': [{'key': str, 'prompt': str}]}
+                - webhook (dict): {'enabled': bool, 'include': list}
+            filler (dict, optional): Filler audio injection.
+                - enabled (bool): Enable fillers (e.g. "hmm", "let me check").
+                - after_sec (float): Seconds of silence before injecting filler.
             background_track (dict, optional): Ambient background noise/track configuration.
+                - enabled (bool): Enable background track.
+                - name (str): Track name.
+                - volume (float): Volume level (default 0.2).
+                - tts_volume_reduction (float): Ducking amount when TTS plays.
             voicemail (dict, optional): Voicemail detection configuration for outbound calls.
+                - enabled (bool): Detect voicemail/answering machines.
+                - message (str): Message to leave on voicemail.
             end_call (dict, optional): End call logic/messages configuration.
+                - enabled (bool): Allow the agent to hang up proactively.
+                - condition (str): Prompt condition for ending the call.
+                - message (str): Final message to speak before hanging up.
             **kwargs: Additional optional parameters.
 
         Returns:

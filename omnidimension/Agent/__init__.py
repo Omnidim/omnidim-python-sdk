@@ -79,9 +79,8 @@ class Agent():
                 - after_sec (float): Seconds of silence before injecting filler.
             background_track (dict, optional): Ambient background noise/track configuration.
                 - enabled (bool): Enable background track.
-                - name (str): Track name.
-                - volume (float): Volume level (default 0.2).
-                - tts_volume_reduction (float): Ducking amount when TTS plays.
+                - name (str): Track name (e.g. 'office_ambience', 'cafe_noise', 'street_traffic').
+                - volume (float): Volume level from 0.0 to 1.0 (default 0.2).
             voicemail (dict, optional): Voicemail detection configuration for outbound calls.
                 - enabled (bool): Detect voicemail/answering machines.
                 - message (str): Message to leave on voicemail.

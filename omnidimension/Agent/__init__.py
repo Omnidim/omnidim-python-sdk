@@ -41,7 +41,8 @@ class Agent():
     def create(self, name, context_breakdown, welcome_message=None, call_type=None,
                is_interruption_allowed=None, is_welcome_message_dynamic=None,
                is_welcome_message_interruption=None, transcriber=None, model=None,
-               voice=None, web_search=None, post_call_actions=None, filler=None, **kwargs):
+               voice=None, web_search=None, post_call_actions=None, filler=None,
+               background_track=None, voicemail=None, end_call=None, **kwargs):
         """
         Create a custom agent with the provided configuration and optional parameters.
 
@@ -59,6 +60,9 @@ class Agent():
             web_search (dict, optional): Web search configuration.
             post_call_actions (dict, optional): Webhook or email actions after the call.
             filler (dict, optional): Filler sounds configuration.
+            background_track (dict, optional): Ambient background noise/track configuration.
+            voicemail (dict, optional): Voicemail detection configuration for outbound calls.
+            end_call (dict, optional): End call logic/messages configuration.
             **kwargs: Additional optional parameters.
 
         Returns:
@@ -96,6 +100,9 @@ class Agent():
         if web_search is not None: data["web_search"] = web_search
         if post_call_actions is not None: data["post_call_actions"] = post_call_actions
         if filler is not None: data["filler"] = filler
+        if background_track is not None: data["background_track"] = background_track
+        if voicemail is not None: data["voicemail"] = voicemail
+        if end_call is not None: data["end_call"] = end_call
         
         # Include any additional kwargs
         data.update(kwargs)

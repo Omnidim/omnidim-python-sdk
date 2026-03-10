@@ -158,3 +158,4 @@ class Agent():
             dict: Response indicating success or failure.
         """
         return self.client.delete(f"agents/{agent_id}")
+ 

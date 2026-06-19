@@ -30,12 +30,6 @@ OmniDimension lets you **build, test, and deploy** reliable voice AI assistants 
 pip install omnidimension
 ````
 
-### With MCP Server Support
-
-```bash
-pip install omnidimension[mcp]
-```
-
 > Requires Python 3.9+
 
 ---
@@ -83,50 +77,36 @@ print(agents)
 
 ---
 
-## 🛰️ MCP Server Usage
+## 🛰️ MCP server
 
-You can run the MCP server in several ways:
+The OmniDimension MCP server lives in its own repositories, not in this SDK. Pick whichever fits your client.
 
-### 1. Using the Python module:
+### Hosted (no install)
 
-```bash
-python -m omnidimension.mcp_server --api-key your_api_key
+Point any MCP client at the hosted server. It speaks the standard OAuth flow, so clients discover the rest automatically:
+
+```
+https://mcp.omnidim.io/mcp
 ```
 
-### 2. Using the CLI entry point:
+For Claude Code:
 
 ```bash
-omnidim-mcp-server --api-key your_api_key
+claude mcp add --transport http omnidim https://mcp.omnidim.io/mcp --scope user
 ```
 
-### 3. Using the compatibility module (for MCP clients):
+Source: [Omnidim/omnidim-mcp-cloud](https://github.com/Omnidim/omnidim-mcp-cloud)
 
-```bash
-python -m omnidim_mcp_server --api-key your_api_key
-```
+### Local (stdio)
 
-You can also set the API key using the environment variable:
-
-```bash
-export OMNIDIM_API_KEY=your_api_key
-python -m omnidimension.mcp_server
-```
-
----
-
-## ⚙️ MCP Client Configuration
-
-To use OmniDimension with MCP clients like Claude Desktop, save the following configuration to a file named `omnidim_mcp.json`:
+For clients that launch a local server (Claude Desktop, Cursor, Windsurf), use the npm package [`@omnidim-ai/mcp-server`](https://www.npmjs.com/package/@omnidim-ai/mcp-server). Save this as your MCP client config:
 
 ```json
 {
   "mcpServers": {
-    "omnidim-mcp-server": {
-      "command": "python3",
-      "args": [
-        "-m",
-        "omnidim_mcp_server"
-      ],
+    "omnidim": {
+      "command": "npx",
+      "args": ["-y", "@omnidim-ai/mcp-server"],
       "env": {
         "OMNIDIM_API_KEY": "<your_omnidim_api_key>"
       }
@@ -134,6 +114,8 @@ To use OmniDimension with MCP clients like Claude Desktop, save the following co
   }
 }
 ```
+
+Source: [Omnidim/omnidim-mcp-server](https://github.com/Omnidim/omnidim-mcp-server)
 
 ---
 

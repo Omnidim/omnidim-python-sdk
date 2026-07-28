@@ -150,12 +150,114 @@ class Agent():
     def delete(self, agent_id):
         """
         Delete an agent.
-        
+
         Args:
             agent_id (int): The ID of the agent to delete.
-            
+
         Returns:
             dict: Response indicating success or failure.
         """
         return self.client.delete(f"agents/{agent_id}")
- 
+
+    def list_versions(self, agent_id, pageno=1, pagesize=30, search=None, kind=None):
+        """
+        Get the version history for an agent.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            pageno (int): Page number for pagination (default: 1).
+            pagesize (int): Number of items per page (default: 30).
+            search (str, optional): Filter versions by name/note search term.
+            kind (str, optional): Filter versions by kind (e.g. 'manual', 'auto').
+
+        Returns:
+            dict: Response containing the list of versions.
+        """
+        params = {
+            'pageno': pageno,
+            'pagesize': pagesize,
+            'search': search,
+            'kind': kind
+        }
+        return self.client.get(f"agents/{agent_id}/versions", params=params)
+
+    def save_version(self, agent_id, name, note=None):
+        """
+        Save the current state of an agent as a new version.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            name (str): Name for the saved version.
+            note (str, optional): Note describing the version.
+
+        Returns:
+            dict: Response containing the saved version details.
+        """
+        data = {
+            "name": name
+        }
+        if note is not None: data["note"] = note
+
+        return self.client.post(f"agents/{agent_id}/versions", data=data)
+
+    def diff_version(self, agent_id, version_number, against=None):
+        """
+        Get the diff for an agent version.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            version_number (int): The version number to diff.
+            against (int, optional): Version number to diff against (defaults to the current version).
+
+        Returns:
+            dict: Response containing the version diff.
+        """
+        params = {}
+        if against is not None: params["against"] = against
+
+        return self.client.get(f"agents/{agent_id}/versions/{version_number}/diff", params=params)
+
+    def restore_version(self, agent_id, version_number):
+        """
+        Restore an agent to a previous version.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            version_number (int): The version number to restore.
+
+        Returns:
+            dict: Response containing the restored agent details.
+        """
+        return self.client.post(f"agents/{agent_id}/versions/{version_number}/restore")
+
+    def delete_version(self, agent_id, version_number):
+        """
+        Delete a saved agent version.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            version_number (int): The version number to delete.
+
+        Returns:
+            dict: Response indicating success or failure.
+        """
+        return self.client.delete(f"agents/{agent_id}/versions/{version_number}")
+
+    def rename_version(self, agent_id, version_number, name=None, note=None):
+        """
+        Rename or update the note on a saved agent version.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            version_number (int): The version number to update.
+            name (str, optional): New name for the version.
+            note (str, optional): New note for the version.
+
+        Returns:
+            dict: Response containing the updated version details.
+        """
+        data = {}
+        if name is not None: data["name"] = name
+        if note is not None: data["note"] = note
+
+        return self.client.patch(f"agents/{agent_id}/versions/{version_number}", data=data)

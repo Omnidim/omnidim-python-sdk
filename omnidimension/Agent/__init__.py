@@ -185,6 +185,10 @@ class Agent():
         """
         Save the current state of an agent as a new version.
 
+        There is a per-agent limit on versions created through the API; once it
+        is reached this returns a 409 until an old version is deleted. Versions
+        saved from the dashboard are not limited.
+
         Args:
             agent_id (int): The ID of the agent.
             name (str): Name for the saved version.
@@ -207,7 +211,10 @@ class Agent():
         Args:
             agent_id (int): The ID of the agent.
             version_number (int): The version number to diff.
-            against (int, optional): Version number to diff against (defaults to the current version).
+            against (optional): What to compare against. Omit or "previous" for
+                the version before this one (the default: what changed in this
+                version). "current" for the agent's live config. A version
+                number to compare with that version.
 
         Returns:
             dict: Response containing the version diff.

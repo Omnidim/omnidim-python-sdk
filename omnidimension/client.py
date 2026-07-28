@@ -131,7 +131,11 @@ class Client(object):
     def put(self, endpoint, data=None, params=None, headers=None):
         """Make a PUT request to the API."""
         return self.request("PUT", endpoint, params=params, headers=headers, json_data=data)
-    
+
+    def patch(self, endpoint, data=None, params=None, headers=None):
+        """Make a PATCH request to the API."""
+        return self.request("PATCH", endpoint, params=params, headers=headers, json_data=data)
+
     def delete(self, endpoint, params=None, headers=None):
         """Make a DELETE request to the API."""
         return self.request("DELETE", endpoint, params=params, headers=headers)

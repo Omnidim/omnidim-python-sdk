@@ -261,3 +261,11 @@ client.bulk_call.cancel_bulk_calls(bulk_call_id=123)
 
 Visit [omnidim.io](https://www.omnidim.io/) to explore the full platform, UI builder, and templates.
 
+---
+
+## 💬 Support
+
+- Ask in [our Discord](https://discord.gg/kdjzykMTHJ), where engineers from the team answer build questions.
+- Bugs and feature requests: [open an issue](https://github.com/Omnidim/omnidim-python-sdk/issues).
+- Account or billing: [support@omnidim.io](mailto:support@omnidim.io).
+

@@ -176,6 +176,73 @@ numbers = client.phone_number.list(page=1, page_size=10)
 print(numbers)
 
 client.phone_number.attach(phone_number_id=321, agent_id=123)
+
+# Search for numbers available to purchase in a region
+available = client.phone_number.search(region="US", pattern="415", page=1, limit=20)
+print(available)
+
+# Purchase one of the numbers found above
+purchase = client.phone_number.purchase(
+    region="US",
+    phone_number="+14155550123",
+    idempotency_key="order-2024-12-01-001"  # safe to retry with the same key
+)
+print(purchase)
+
+# Release a number you no longer need
+client.phone_number.release(phone_number="+14155550123")
+```
+
+Reseller accounts can pass `user_id` to `list`, `search`, `purchase`, and `release` to act on a
+specific child client's account instead of their own.
+
+---
+
+## 🤝 Reseller Management
+
+Reseller-only methods for managing child organizations, users, credits, and KYC.
+
+```python
+# List child organizations
+orgs = client.reseller.list_organizations()
+
+# Create a new child user
+new_user = client.reseller.add_user(
+    name="Jane Doe",
+    email="jane@example.com",
+    phone="+14155550123",
+    password="a-strong-password",
+    welcome_minutes_to_credit=100,
+    cost_per_min=0.05
+)
+
+# Control which dashboard menus a child user can see
+client.reseller.set_access_control(
+    user_id=456,
+    dashboard_menu_access={"billing": True, "agents": True, "integrations": False}
+)
+
+# Set or clear a child account's expiry date
+client.reseller.set_expiry(user_id=456, expiry_date="2025-12-31")
+client.reseller.set_expiry(user_id=456)  # clears the expiry
+
+# Set a child organization's concurrent call limit (absolute value, not a delta)
+client.reseller.set_concurrency(child_organization_id=789, new_limit=10)
+
+# Calculate and transfer credits
+cost = client.reseller.calculate_credits(minutes=500, cost_per_min=0.05)
+client.reseller.transfer_credits(to_organization_id=789, minutes=500, cost_per_min=0.05)
+
+# Revert a previous transfer (uses the original rate, no cost_per_min to pass)
+client.reseller.revert_credits(from_organization_id=789, minutes=500)
+
+# Credit transfer/revert history
+logs = client.reseller.credit_logs(page=1, page_size=30)
+
+# KYC: check status, then walk next_step until it reports "completed"
+status = client.reseller.kyc_status(user_id=456)
+requirements = client.reseller.kyc_requirements(region="IN")
+client.reseller.submit_kyc_step(step="register", user_id=456, region="IN", full_name="Jane Doe")
 ```
 
 ---

@@ -33,6 +33,7 @@ class Client(object):
         self._knowledge_base = None
         self._phone_number = None
         self._providers = None
+        self._reseller = None
         self._simulation = None
         
         # Verify API key format (basic validation)
@@ -196,6 +197,14 @@ class Client(object):
             from .Providers import Providers
             self._providers = Providers(self)
         return self._providers
+
+    @property
+    def reseller(self):
+        """Get the Reseller client."""
+        if self._reseller is None:
+            from .Reseller import Reseller
+            self._reseller = Reseller(self)
+        return self._reseller
 
     @property
     def simulation(self):

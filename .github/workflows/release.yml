@@ -38,8 +38,8 @@ jobs:
       - name: Verify tag matches package version
         run: |
           package_version="$(python setup.py --version)"
-          if [ "${package_version}" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match package version ${package_version}." >&2
+          if [ "${package_version}" != "${RELEASE_TAG}" ]; then
+            echo "Tag ${RELEASE_TAG} does not match package version ${package_version}." >&2
             exit 1
           fi
 

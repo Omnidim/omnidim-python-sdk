@@ -21,3 +21,4 @@ To release a new version:
 
 The workflow does not republish a version that is already on PyPI. This lets a
 missing GitHub Release be reconciled safely without replacing the PyPI files.
+Use **Run workflow** with the existing tag to reconcile one of those releases.

@@ -285,6 +285,43 @@ scheduled_call = client.bulk_call.create_bulk_calls(
     timezone="America/New_York"
 )
 
+# Create a draft campaign with number rotation and call conditions
+draft = client.bulk_call.create_bulk_calls(
+    name="Draft Campaign",
+    contact_list=contact_list,
+    phone_number_id=phone_number_id,
+    save_as_draft=True,
+    call_conditions=[
+        {"column": "product_interest", "operator": "=", "value": "Premium Plan"}
+    ],
+    rotation={
+        "numbers": [
+            {"phone_number_id": phone_number_id, "sequence": 1},
+            {"phone_number_id": 456, "sequence": 2}
+        ],
+        "strategy": "round_robin",
+        "calls_per_number": 50
+    },
+    concurrent_call_limit=5
+)
+bulk_call_id = draft['json']['id']
+
+# Add contacts to an existing campaign
+client.bulk_call.add_contact(
+    bulk_call_id=bulk_call_id,
+    to_number="+1234567890",
+    custom_variables={"customer_name": "John Doe"}
+)
+client.bulk_call.add_contacts(
+    bulk_call_id=bulk_call_id,
+    contacts=[
+        {"to_number": "+1987654321", "custom_variables": {"customer_name": "Jane Smith"}}
+    ]  # up to 1000 contacts per request
+)
+
+# Start the draft campaign
+client.bulk_call.start_bulk_call(bulk_call_id=bulk_call_id)
+
 # Fetch all bulk calls
 bulk_calls = client.bulk_call.fetch_bulk_calls(page=1, page_size=10, status="active")
 
@@ -303,6 +340,32 @@ client.bulk_call.bulk_calls_actions(
 
 # Cancel bulk call
 client.bulk_call.cancel_bulk_calls(bulk_call_id=123)
+
+# Live status of a running campaign
+status = client.bulk_call.get_live_status(bulk_call_id=123)
+
+# Call lines with cursor pagination and filters
+lines = client.bulk_call.get_bulk_call_lines(
+    bulk_call_id=123,
+    pagesize=50,  # max 150
+    call_status="completed",
+    include_total=True
+)
+next_page = client.bulk_call.get_bulk_call_lines(
+    bulk_call_id=123,
+    cursor=lines['json']['next_cursor']
+)
+
+# Retry failed calls manually
+client.bulk_call.manual_retry(bulk_call_id=123)
+
+# Change the concurrent call limit of a campaign
+client.bulk_call.update_concurrency(bulk_call_id=123, concurrent_call_limit=10)
+
+# Manage the campaign's number rotation
+numbers = client.bulk_call.list_rotation_numbers(bulk_call_id=123)
+client.bulk_call.add_rotation_number(bulk_call_id=123, phone_number_id=456)
+client.bulk_call.set_rotation_number_active(bulk_call_id=123, assignment_id=789, is_active=False)
 ```
 
 ---

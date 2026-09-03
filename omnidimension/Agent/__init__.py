@@ -42,7 +42,8 @@ class Agent():
                is_interruption_allowed=None, is_welcome_message_dynamic=None,
                is_welcome_message_interruption=None, transcriber=None, model=None,
                voice=None, web_search=None, post_call_actions=None, filler=None,
-               background_track=None, voicemail=None, end_call=None, **kwargs):
+               background_track=None, voicemail=None, end_call=None, timezone=None,
+               **kwargs):
         """
         Create a custom agent with the provided configuration and optional parameters.
 
@@ -88,6 +89,9 @@ class Agent():
                 - enabled (bool): Allow the agent to hang up proactively.
                 - condition (str): Prompt condition for ending the call.
                 - message (str): Final message to speak before hanging up.
+            timezone (str, optional): IANA timezone for this agent, e.g. 'Asia/Kolkata'.
+                Sets the local date and time the agent works with during calls.
+                If not set, the account timezone is used as fallback.
             **kwargs: Additional optional parameters.
 
         Returns:
@@ -128,7 +132,8 @@ class Agent():
         if background_track is not None: data["background_track"] = background_track
         if voicemail is not None: data["voicemail"] = voicemail
         if end_call is not None: data["end_call"] = end_call
-        
+        if timezone is not None: data["timezone"] = timezone
+
         # Include any additional kwargs
         data.update(kwargs)
 

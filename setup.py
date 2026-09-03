@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="omnidimension",
-    version="0.3.0",
+    version="0.4.0",
     packages=find_packages() + ["omnidim_mcp_server"],
     install_requires=["requests"],
     extras_require={

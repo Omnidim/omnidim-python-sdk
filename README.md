@@ -178,13 +178,16 @@ print(numbers)
 client.phone_number.attach(phone_number_id=321, agent_id=123)
 
 # Search for numbers available to purchase in a region
-available = client.phone_number.search(region="US", pattern="415", page=1, limit=20)
+# carrier is region-specific; every region currently requires one. Omitting it
+# (or passing an unknown value) gets a 409/404 back listing the valid carriers.
+available = client.phone_number.search(region="US", pattern="415", page=1, limit=20, carrier="carrier-us")
 print(available)
 
 # Purchase one of the numbers found above
 purchase = client.phone_number.purchase(
     region="US",
     phone_number="+14155550123",
+    carrier="carrier-us",
     idempotency_key="order-2024-12-01-001"  # safe to retry with the same key
 )
 print(purchase)
@@ -240,9 +243,12 @@ client.reseller.revert_credits(from_organization_id=789, minutes=500)
 logs = client.reseller.credit_logs(page=1, page_size=30)
 
 # KYC: check status, then walk next_step until it reports "completed"
+# carrier decides both the requirements and the step flow; every region
+# currently requires one, and step names are only knowable from this call.
 status = client.reseller.kyc_status(user_id=456)
-requirements = client.reseller.kyc_requirements(region="IN")
-client.reseller.submit_kyc_step(step="register", user_id=456, region="IN", full_name="Jane Doe")
+requirements = client.reseller.kyc_requirements(region="IN", carrier="carrier-1")
+client.reseller.submit_kyc_step(
+    step="register", user_id=456, region="IN", carrier="carrier-1", full_name="Jane Doe")
 ```
 
 ---

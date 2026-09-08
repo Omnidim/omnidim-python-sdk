@@ -275,12 +275,18 @@ class Reseller():
         params = {'user_id': user_id}
         return self.client.get("reseller/kyc/status", params=params)
 
-    def kyc_requirements(self, region):
+    def kyc_requirements(self, region, carrier=None):
         """
         Get the KYC requirements for a region.
 
         Args:
             region (str): Region to get KYC requirements for.
+            carrier (str): Carrier to get requirements for; valid values
+                depend on region and are not fixed by this SDK. Carriers in
+                the same region can have different requirements, so this
+                decides the answer: an omitted or unknown carrier gets
+                rejected by the API, which replies with the valid carriers
+                for that region so you can retry (optional).
 
         Returns:
             dict: Response describing the required KYC steps for the region.
@@ -292,9 +298,11 @@ class Reseller():
             raise ValueError("region is required.")
 
         params = {'region': region}
+        if carrier is not None:
+            params['carrier'] = carrier
         return self.client.get("reseller/kyc/requirements", params=params)
 
-    def submit_kyc_step(self, step, user_id, region, **fields):
+    def submit_kyc_step(self, step, user_id, region, carrier=None, **fields):
         """
         Submit one step of the KYC flow for a child user.
 
@@ -303,11 +311,16 @@ class Reseller():
         next call to submit_kyc_step until the status is "completed".
 
         Args:
-            step (str): KYC step name, e.g. register, verify-otp, resend-otp,
-                verify-pan, aadhaar-otp, aadhaar-verify, verify-gst, skip-gst,
-                preview, accept.
+            step (str): KYC step name for this carrier's flow. The valid
+                step names and their order are not fixed by this SDK: they
+                differ per carrier. Call kyc_requirements(region, carrier)
+                to get the actual steps before submitting.
             user_id (int): ID of the child user.
             region (str): Region the KYC submission applies to.
+            carrier (str): Carrier the KYC submission applies to; valid
+                values depend on region and are not fixed by this SDK.
+                Verification is per carrier: it decides which flow is
+                walked and which record gets written (optional).
             **fields: Additional fields required by the given step.
 
         Returns:
@@ -327,6 +340,8 @@ class Reseller():
             'user_id': user_id,
             'region': region
         }
+        if carrier is not None:
+            data['carrier'] = carrier
         data.update(fields)
 
         return self.client.post("reseller/kyc/steps/{}".format(step), data=data)

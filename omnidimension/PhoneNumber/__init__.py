@@ -29,7 +29,7 @@ class PhoneNumber():
             params['user_id'] = user_id
         return self.client.get("phone_number/list", params=params)
 
-    def search(self, region, pattern=None, page=1, limit=20, user_id=None):
+    def search(self, region, pattern=None, page=1, limit=20, user_id=None, carrier=None):
         """
         Search for phone numbers available for purchase in a region.
 
@@ -40,6 +40,11 @@ class PhoneNumber():
             limit (int): Number of items per page (default: 20).
             user_id (int): Reseller accounts only, names the client to act on.
                 Omit it to act on your own account (optional).
+            carrier (str): Carrier to search under; valid values depend on
+                region and are not fixed by this SDK. Every region currently
+                requires one: an omitted or unknown carrier gets rejected by
+                the API, which replies with the valid carriers for that
+                region so you can retry (optional).
 
         Returns:
             dict: Response containing matching phone numbers.
@@ -59,9 +64,11 @@ class PhoneNumber():
             params['limit'] = limit
         if user_id is not None:
             params['user_id'] = user_id
+        if carrier is not None:
+            params['carrier'] = carrier
         return self.client.get("phone_number/search", params=params)
 
-    def purchase(self, region, phone_number, user_id=None, idempotency_key=None):
+    def purchase(self, region, phone_number, user_id=None, idempotency_key=None, carrier=None):
         """
         Purchase a phone number in a region.
 
@@ -73,6 +80,11 @@ class PhoneNumber():
             idempotency_key (str): Key to safely retry the purchase without
                 double-charging; a replayed key returns the original order
                 with "replayed": true (optional).
+            carrier (str): Carrier the number belongs to; valid values depend
+                on region and are not fixed by this SDK. Every region
+                currently requires one: an omitted or unknown carrier gets
+                rejected by the API, which replies with the valid carriers
+                for that region so you can retry (optional).
 
         Returns:
             dict: Response containing the purchase details.
@@ -91,6 +103,8 @@ class PhoneNumber():
         }
         if user_id is not None:
             data['user_id'] = user_id
+        if carrier is not None:
+            data['carrier'] = carrier
 
         # Client.post already accepts and forwards headers, so no client.py change is needed.
         headers = {"Idempotency-Key": idempotency_key} if idempotency_key else None

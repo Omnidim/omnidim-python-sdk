@@ -119,6 +119,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ env.RELEASE_TAG }}
+          # This job only downloads the built artifact, it never checks the
+          # repo out, so `gh` has no git remote to infer the target from and
+          # died with "not a git repository". Naming it explicitly is cheaper
+          # than a checkout we would otherwise not need.
+          GH_REPO: ${{ github.repository }}
         run: |
           if gh release view "$TAG_NAME" > /dev/null 2>&1; then
             exit 0

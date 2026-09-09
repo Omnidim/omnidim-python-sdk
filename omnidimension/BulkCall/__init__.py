@@ -385,3 +385,48 @@ class BulkCall():
 
         return self.client.put(f"calls/bulk_call/{bulk_call_id}/numbers/{assignment_id}",
                                data={'is_active': is_active})
+
+    def set_daily_time_control(self, bulk_call_id, enable_daily_hard_stop,
+                               enable_daily_auto_start, daily_stop_time=None,
+                               daily_stop_timezone=None, daily_start_time=None,
+                               daily_start_timezone=None):
+        """
+        Set the hours of the day a campaign is allowed to dial in.
+
+        The window follows its own timezone fields, not the agent's and not the
+        campaign's, so pass them when the client is not in the account's zone.
+
+        Args:
+            bulk_call_id (int): ID of the campaign.
+            enable_daily_hard_stop (bool): Stop dialing at daily_stop_time.
+            enable_daily_auto_start (bool): Resume dialing at daily_start_time.
+            daily_stop_time (float): Hour to stop at, 24-hour clock (optional).
+            daily_stop_timezone (str): IANA zone for the stop time (optional).
+            daily_start_time (float): Hour to resume at, 24-hour clock (optional).
+            daily_start_timezone (str): IANA zone for the start time (optional).
+
+        Returns:
+            dict: Response containing the updated window.
+
+        Raises:
+            ValueError: If either enable flag is not a boolean.
+        """
+        if not isinstance(enable_daily_hard_stop, bool):
+            raise ValueError("enable_daily_hard_stop must be a boolean")
+        if not isinstance(enable_daily_auto_start, bool):
+            raise ValueError("enable_daily_auto_start must be a boolean")
+
+        data = {
+            'enable_daily_hard_stop': enable_daily_hard_stop,
+            'enable_daily_auto_start': enable_daily_auto_start,
+        }
+        optional = {
+            'daily_stop_time': daily_stop_time,
+            'daily_stop_timezone': daily_stop_timezone,
+            'daily_start_time': daily_start_time,
+            'daily_start_timezone': daily_start_timezone,
+        }
+        data.update({k: v for k, v in optional.items() if v is not None})
+
+        return self.client.put(f"calls/bulk_call/{bulk_call_id}/daily-time-control",
+                               data=data)

@@ -27,7 +27,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: pip install --upgrade pip && pip install requests pyyaml
+      # Installed, not path-hacked: the check imports the package the way a
+      # user does, so a broken setup.py fails here too.
+      - run: pip install --upgrade pip && pip install -e . && pip install pyyaml
       - run: python -m unittest discover -s tests -v
       - name: Check the SDK against the published spec
         run: python scripts/check_spec.py

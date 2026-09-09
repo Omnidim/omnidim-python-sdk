@@ -1,0 +1,57 @@
+# Checks this SDK against the published OpenAPI spec.
+#
+# This package is hand-written, so nothing regenerates when the API moves.
+# The spec repo dispatches here on merge; the cron is a backstop, because
+# GitHub disables a scheduled workflow after 60 days without repo activity.
+#
+# On a pull request it runs against the spec as published, so a PR cannot
+# introduce drift either.
+
+name: spec-check
+
+on:
+  repository_dispatch:
+    types: [spec-changed]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install --upgrade pip && pip install requests pyyaml
+      - run: python -m unittest discover -s tests -v
+      - name: Check the SDK against the published spec
+        run: python scripts/check_spec.py
+
+      # A red run nobody opens is how this drifted in the first place, so a
+      # failure on the scheduled or dispatched path leaves an issue behind.
+      - name: Open an issue if the spec moved away from us
+        if: failure() && github.event_name != 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = 'Spec drift: the SDK no longer matches the published API';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'spec-drift',
+            });
+            if (existing.data.length) return;
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title,
+              labels: ['spec-drift'],
+              body: `\`scripts/check_spec.py\` failed on ${context.sha}.\n\n`
+                + `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}`
+                + `/actions/runs/${context.runId}\n\n`
+                + `Either add the missing method, or add the operation to `
+                + `\`DELIBERATE\` in that script with a reason.`,
+            });

@@ -180,3 +180,120 @@ class PhoneNumber():
         }
         
         return self.client.post("phone_number/detach", data=data)
+    def import_twilio(self, phone_number, account_sid, account_token, name=None):
+        """
+        Import a number you already own on Twilio.
+
+        Args:
+            phone_number (str): The number to import, in E.164 format.
+            account_sid (str): Your Twilio account SID.
+            account_token (str): Your Twilio auth token.
+            name (str): Friendly name for the imported number (optional).
+
+        Returns:
+            dict: Response containing the imported number.
+
+        Raises:
+            ValueError: If phone_number, account_sid, or account_token is missing.
+        """
+        if not phone_number:
+            raise ValueError("phone_number is required.")
+        if not account_sid:
+            raise ValueError("account_sid is required.")
+        if not account_token:
+            raise ValueError("account_token is required.")
+
+        data = {
+            "phone_number": phone_number,
+            "account_sid": account_sid,
+            "account_token": account_token,
+        }
+        if name is not None:
+            data["name"] = name
+
+        return self.client.post("phone_number/import/twilio", data=data)
+
+    def import_exotel(self, exotel_phone_number, exotel_api_key, exotel_api_token,
+                      exotel_subdomain, exotel_account_sid, exotel_app_id, name=None):
+        """
+        Import a number you already own on Exotel.
+
+        Args:
+            exotel_phone_number (str): The number to import.
+            exotel_api_key (str): Your Exotel API key.
+            exotel_api_token (str): Your Exotel API token.
+            exotel_subdomain (str): Your Exotel subdomain.
+            exotel_account_sid (str): Your Exotel account SID.
+            exotel_app_id (str): The Exotel app to route calls through.
+            name (str): Friendly name for the imported number (optional).
+
+        Returns:
+            dict: Response containing the imported number.
+
+        Raises:
+            ValueError: If any required credential or the number is missing.
+        """
+        required = {
+            "exotel_phone_number": exotel_phone_number,
+            "exotel_api_key": exotel_api_key,
+            "exotel_api_token": exotel_api_token,
+            "exotel_subdomain": exotel_subdomain,
+            "exotel_account_sid": exotel_account_sid,
+            "exotel_app_id": exotel_app_id,
+        }
+        for field, value in required.items():
+            if not value:
+                raise ValueError(f"{field} is required.")
+
+        data = dict(required)
+        if name is not None:
+            data["name"] = name
+
+        return self.client.post("phone_number/import/exotel", data=data)
+
+    def import_sip(self, phone_number, sip_host, sip_trunk_name, name=None,
+                   sip_port=None, sip_username=None, sip_password=None,
+                   sip_dial_prefix=None, sip_strip_plus=None):
+        """
+        Import a number served by your own SIP trunk.
+
+        Args:
+            phone_number (str): The number to import, in E.164 format.
+            sip_host (str): Hostname or IP of the SIP trunk.
+            sip_trunk_name (str): Name to identify the trunk by.
+            name (str): Friendly name for the imported number (optional).
+            sip_port (int): Trunk port. The API defaults to 5060 (optional).
+            sip_username (str): Trunk username (optional).
+            sip_password (str): Trunk password (optional).
+            sip_dial_prefix (str): Digits to prepend when dialing out (optional).
+            sip_strip_plus (bool): Strip the leading + before dialing (optional).
+
+        Returns:
+            dict: Response containing the imported number.
+
+        Raises:
+            ValueError: If phone_number, sip_host, or sip_trunk_name is missing.
+        """
+        if not phone_number:
+            raise ValueError("phone_number is required.")
+        if not sip_host:
+            raise ValueError("sip_host is required.")
+        if not sip_trunk_name:
+            raise ValueError("sip_trunk_name is required.")
+
+        data = {
+            "phone_number": phone_number,
+            "sip_host": sip_host,
+            "sip_trunk_name": sip_trunk_name,
+        }
+        optional = {
+            "name": name,
+            "sip_port": sip_port,
+            "sip_username": sip_username,
+            "sip_password": sip_password,
+            "sip_dial_prefix": sip_dial_prefix,
+            "sip_strip_plus": sip_strip_plus,
+        }
+        data.update({k: v for k, v in optional.items() if v is not None})
+
+        return self.client.post("phone_number/import/sip", data=data)

@@ -250,19 +250,19 @@ you are low on credit here rather than from a call failing with
 ```python
 wallet = client.account.balance()["json"]
 
-if not wallet["balance"]["can_place_calls"]:
-    raise SystemExit("Out of credit. Top up before dialing.")
-
 print(wallet["balance"]["amount"], wallet["balance"]["currency"])
-print(wallet["estimated_minutes_remaining"]["basic_model"], "basic-model minutes left")
+print(wallet["estimated_minutes_remaining"], "minutes left")
 print(wallet["concurrency"]["available"], "concurrent call slots free")
+
+if not wallet["plan"]["is_usage_based"] and wallet["balance"]["amount"] <= 0:
+    raise SystemExit("Out of credit. Top up before dialing.")
 ```
 
-Branch on `can_place_calls` rather than comparing the balance against zero:
-an organization on usage-based billing can still place calls at a zero
-balance. The response also carries the active plan, per-minute rates, and
-auto-recharge settings. The API key's user needs Billing access in the
-organization.
+Check `plan["is_usage_based"]` before treating a zero balance as a stop
+condition: such an organization keeps placing calls and is metered to its
+payment method instead. The response also carries the active plan, the
+per-minute rate, and auto-recharge settings. The API key's user needs Billing
+access in the organization.
 
 ---
 

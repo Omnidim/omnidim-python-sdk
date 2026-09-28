@@ -38,10 +38,10 @@ jobs:
             // One sticky comment per PR, rewritten on every run so it always matches the current head.
             const marker = '<!-- ai-review -->';
             const upsert = async (content) => {
-              content = content.replace(/@(?=[\w-])/g, '@\u200b'); // never ping anyone from model output
+              content = content.replace(/@(?=[\w-])/g, '@\u200b').slice(0, 60000); // never ping anyone; stay under GitHub's 65k comment limit
               const text = `${marker}\n## AI review (${model}) for \`${sha}\`\n\n${content}\n\n---\n_Advisory only, written by an AI from the diff. A teammate's approval is still required to merge._`;
               const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr.number, per_page: 100 });
-              const mine = comments.find(c => c.body?.startsWith(marker));
+              const mine = comments.find(c => c.body?.startsWith(marker) && c.user?.login === 'github-actions[bot]');
               if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body: text });
               else await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body: text });
             };
@@ -78,7 +78,7 @@ jobs:
                 '</untrusted_pr_content>',
               ].join('\n');
 
-              const ask = async () => {
+              const ask = async ({ reasoning, only }) => {
                 const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                   method: 'POST',
                   headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -86,10 +86,9 @@ jobs:
                     model,
                     messages: [{ role: 'user', content: prompt }],
                     max_tokens: 16000, // reasoning model: thinking tokens count against this; some providers think ~10k
-                    reasoning: { effort: 'low' },
-                    // Only providers that neither train on nor retain prompts (no-data-collection + zero data retention).
-                    // Parasail ignores the reasoning cap and costs ~5x for the same review.
-                    provider: { data_collection: 'deny', zdr: true, ignore: ['Parasail'] },
+                    reasoning,
+                    // Always: only providers that neither train on nor retain prompts (no-data-collection + zero data retention).
+                    provider: { data_collection: 'deny', zdr: true, ...(only ? { only } : {}) },
                   }),
                 });
                 const raw = await res.text();
@@ -102,8 +101,11 @@ jobs:
                 return review;
               };
               let review;
-              try { review = await ask(); }
-              catch (e) { core.warning(`first attempt failed, retrying once: ${e.message}`); review = await ask(); } // ponytail: one retry, providers occasionally return empty
+              // Attempt 1: light thinking, on providers seen to honour effort=low (DekaLLM, InferenceNet, Parasail
+              // ignore it and think past 16k tokens, returning nothing). Attempt 2: thinking off, any ZDR provider,
+              // which always leaves the whole budget for the answer.
+              try { review = await ask({ reasoning: { effort: 'low' }, only: ['Together', 'CoreWeave', 'Wafer', 'Relace', 'Fireworks'] }); }
+              catch (e) { core.warning(`first attempt failed, retrying without reasoning: ${e.message}`); review = await ask({ reasoning: { enabled: false } }); }
               await upsert(review + note);
             } catch (e) {
               core.warning(`AI review failed: ${e.message}`);

@@ -26,6 +26,7 @@ class Client(object):
         self.base_url = base_url.rstrip('/')
         print(self.base_url)
         # Lazy-loaded domain clients
+        self._account = None
         self._agent = None
         self._bulk_call = None
         self._call = None
@@ -141,6 +142,14 @@ class Client(object):
         return self.request("DELETE", endpoint, params=params, headers=headers)
     
     # Domain-specific clients (lazy-loaded)
+    @property
+    def account(self):
+        """Get the Account client."""
+        if self._account is None:
+            from .Account import Account
+            self._account = Account(self)
+        return self._account
+
     @property
     def agent(self):
         """Get the Agent client."""

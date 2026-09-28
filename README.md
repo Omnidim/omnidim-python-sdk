@@ -19,6 +19,7 @@ OmniDimension lets you **build, test, and deploy** reliable voice AI assistants 
 - **Integrations:** Connect to external APIs, CRMs, or tools like Cal.com.
 - **Phone agents:** Assign numbers and initiate real voice calls via the SDK.
 - **Bulk Call:** Send multiple voice calls AI to multiple numbers simultaneously.
+- **Account balance:** Check remaining credit, the minutes it buys, and concurrency headroom before you dial.
 
 ---
 
@@ -237,6 +238,31 @@ client.bulk_call.bulk_calls_actions(
 # Cancel bulk call
 client.bulk_call.cancel_bulk_calls(bulk_call_id=123)
 ```
+
+---
+
+## 💳 Account Balance
+
+Check what is left in the wallet before starting a campaign, so you find out
+you are low on credit here rather than from a call failing with
+`402 payment_required`.
+
+```python
+wallet = client.account.balance()["json"]
+
+if not wallet["balance"]["can_place_calls"]:
+    raise SystemExit("Out of credit. Top up before dialing.")
+
+print(wallet["balance"]["amount"], wallet["balance"]["currency"])
+print(wallet["estimated_minutes_remaining"]["basic_model"], "basic-model minutes left")
+print(wallet["concurrency"]["available"], "concurrent call slots free")
+```
+
+Branch on `can_place_calls` rather than comparing the balance against zero:
+an organization on usage-based billing can still place calls at a zero
+balance. The response also carries the active plan, per-minute rates, and
+auto-recharge settings. The API key's user needs Billing access in the
+organization.
 
 ---
 

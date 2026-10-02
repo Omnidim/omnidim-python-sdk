@@ -19,6 +19,7 @@ OmniDimension lets you **build, test, and deploy** reliable voice AI assistants 
 - **Integrations:** Connect to external APIs, CRMs, or tools like Cal.com.
 - **Phone agents:** Assign numbers and initiate real voice calls via the SDK.
 - **Bulk Call:** Send multiple voice calls AI to multiple numbers simultaneously.
+- **Account balance:** Check remaining credit, the minutes it buys, and concurrency headroom before you dial.
 
 ---
 
@@ -373,6 +374,31 @@ numbers = client.bulk_call.list_rotation_numbers(bulk_call_id=123)
 client.bulk_call.add_rotation_number(bulk_call_id=123, phone_number_id=456)
 client.bulk_call.set_rotation_number_active(bulk_call_id=123, assignment_id=789, is_active=False)
 ```
+
+---
+
+## 💳 Account Balance
+
+Check what is left in the wallet before starting a campaign, so you find out
+you are low on credit here rather than from a call failing with
+`402 payment_required`.
+
+```python
+wallet = client.account.balance()["json"]
+
+print(wallet["balance"]["amount"], wallet["balance"]["currency"])
+print(wallet["estimated_minutes_remaining"], "minutes left")
+print(wallet["concurrency"]["available"], "concurrent call slots free")
+
+if not wallet["plan"]["is_usage_based"] and wallet["balance"]["amount"] <= 0:
+    raise SystemExit("Out of credit. Top up before dialing.")
+```
+
+Check `plan["is_usage_based"]` before treating a zero balance as a stop
+condition: such an organization keeps placing calls and is metered to its
+payment method instead. The response also carries the active plan, the
+per-minute rate, and auto-recharge settings. The API key's user needs Billing
+access in the organization.
 
 ---
 

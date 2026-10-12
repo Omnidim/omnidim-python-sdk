@@ -40,7 +40,8 @@ class Client(object):
         if not isinstance(api_key, str) or len(api_key.strip()) < 8:
             raise ValueError("API key appears to be invalid. Please check your credentials.")
 
-    def request(self, method, endpoint, params=None, headers=None, data=None, json_data=None):
+    def request(self, method, endpoint, params=None, headers=None, data=None, json_data=None,
+                files=None):
         """
         Universal request method to handle all API requests.
 
@@ -51,6 +52,7 @@ class Client(object):
             headers (dict, optional): HTTP headers
             data (dict, optional): Form data
             json_data (dict, optional): JSON data
+            files (dict, optional): Files to send as multipart/form-data
 
         Returns:
             dict: Response with status code and JSON data
@@ -66,7 +68,9 @@ class Client(object):
         
         # Add authorization header
         headers.setdefault('Authorization', f'Bearer {self.api_key}')
-        headers.setdefault('Content-Type', 'application/json')
+        # A multipart body needs the boundary header requests writes itself.
+        if not files:
+            headers.setdefault('Content-Type', 'application/json')
         headers.setdefault('Accept', 'application/json')
         
         # Build full URL
@@ -79,7 +83,8 @@ class Client(object):
                 params=params,
                 headers=headers,
                 data=data,
-                json=json_data
+                json=json_data,
+                files=files
             )
             
             # Check for HTTP errors
@@ -125,8 +130,12 @@ class Client(object):
         """Make a GET request to the API."""
         return self.request("GET", endpoint, params=params, headers=headers)
     
-    def post(self, endpoint, data=None, params=None, headers=None):
-        """Make a POST request to the API."""
+    def post(self, endpoint, data=None, params=None, headers=None, files=None):
+        """Make a POST request to the API. With files, data goes as form fields
+        beside them in one multipart/form-data body. Otherwise it is JSON."""
+        if files:
+            return self.request("POST", endpoint, params=params, headers=headers,
+                                data=data, files=files)
         return self.request("POST", endpoint, params=params, headers=headers, json_data=data)
     
     def put(self, endpoint, data=None, params=None, headers=None):

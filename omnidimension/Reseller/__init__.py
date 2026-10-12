@@ -1,3 +1,6 @@
+import os
+
+
 class Reseller():
     def __init__(self, client):
         """
@@ -321,7 +324,11 @@ class Reseller():
                 values depend on region and are not fixed by this SDK.
                 Verification is per carrier: it decides which flow is
                 walked and which record gets written (optional).
-            **fields: Additional fields required by the given step.
+            **fields: Additional fields required by the given step. On a
+                step whose method is "redirect", pass return_url to bring
+                your client back to a page in your own app afterwards. A
+                step whose method is "upload" takes a file: use
+                upload_kyc_document for it.
 
         Returns:
             dict: Response containing the updated KYC status and next_step.
@@ -345,3 +352,63 @@ class Reseller():
         data.update(fields)
 
         return self.client.post("reseller/kyc/steps/{}".format(step), data=data)
+
+    def upload_kyc_document(self, step, user_id, region, document, filename=None,
+                            carrier=None):
+        """
+        Upload a document for a KYC step whose method is "upload".
+
+        Some carriers need a document after a check, such as the PAN card after
+        PAN verification. next_step names the upload step when one is due, and
+        kyc_requirements lists the accepted formats and size limit.
+
+        Args:
+            step (str): The upload step to run, for example "upload-pan".
+            user_id (int): ID of the child user.
+            region (str): Region the KYC submission applies to.
+            document: A path to the file, its bytes, or a file opened in
+                binary mode.
+            filename (str): Name to send with the file, including its
+                extension. Required when document is bytes; otherwise taken
+                from the file (optional).
+            carrier (str): Carrier the KYC submission applies to (optional).
+
+        Returns:
+            dict: Response containing the updated KYC status and next_step.
+
+        Raises:
+            ValueError: If step, user_id, region or document is missing, or
+                document is bytes and no filename is given.
+        """
+        if not step:
+            raise ValueError("step is required.")
+        if user_id is None:
+            raise ValueError("user_id is required.")
+        if not region:
+            raise ValueError("region is required.")
+        if document is None:
+            raise ValueError("document is required.")
+
+        if isinstance(document, (bytes, bytearray)):
+            if not filename:
+                raise ValueError("filename is required when document is bytes.")
+            content = bytes(document)
+        elif isinstance(document, (str, os.PathLike)):
+            with open(document, 'rb') as handle:
+                content = handle.read()
+            filename = filename or os.path.basename(document)
+        else:
+            content = document.read()
+            filename = filename or os.path.basename(getattr(document, 'name', '') or '')
+            if not filename:
+                raise ValueError("filename is required when the file has no name.")
+
+        data = {
+            'user_id': user_id,
+            'region': region
+        }
+        if carrier is not None:
+            data['carrier'] = carrier
+
+        return self.client.post("reseller/kyc/steps/{}".format(step), data=data,
+                                files={'document': (filename, content)})

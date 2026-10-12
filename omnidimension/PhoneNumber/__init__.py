@@ -133,17 +133,19 @@ class PhoneNumber():
             data['user_id'] = user_id
         return self.client.post("phone_number/release", data=data)
 
-    def attach(self, phone_number_id, agent_id):
+    def attach(self, phone_number_id, agent_id, user_id=None):
         """
         Attach a phone number to an agent.
-        
+
         Args:
             phone_number_id (int): ID of the phone number to attach.
             agent_id (int): ID of the agent to attach the phone number to.
-            
+            user_id (int): Reseller accounts only, names the client to act on.
+                Omit it to act on your own account (optional).
+
         Returns:
             dict: Response indicating success or failure.
-            
+
         Raises:
             ValueError: If phone_number_id or agent_id is not an integer.
         """
@@ -151,34 +153,40 @@ class PhoneNumber():
             raise ValueError("phone_number_id must be an integer.")
         if not isinstance(agent_id, int):
             raise ValueError("agent_id must be an integer.")
-            
+
         data = {
             "phone_number_id": phone_number_id,
             "agent_id": agent_id
         }
-        
+        if user_id is not None:
+            data["user_id"] = user_id
+
         return self.client.post("phone_number/attach", data=data)
     
-    def detach(self, phone_number_id):
+    def detach(self, phone_number_id, user_id=None):
         """
         Detach a phone number from any agent it's attached to.
-        
+
         Args:
             phone_number_id (int): ID of the phone number to detach.
-            
+            user_id (int): Reseller accounts only, names the client to act on.
+                Omit it to act on your own account (optional).
+
         Returns:
             dict: Response indicating success or failure.
-            
+
         Raises:
             ValueError: If phone_number_id is not an integer.
         """
         if not isinstance(phone_number_id, int):
             raise ValueError("phone_number_id must be an integer.")
-            
+
         data = {
             "phone_number_id": phone_number_id
         }
-        
+        if user_id is not None:
+            data["user_id"] = user_id
+
         return self.client.post("phone_number/detach", data=data)
     def import_twilio(self, phone_number, account_sid, account_token, name=None):
         """

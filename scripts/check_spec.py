@@ -44,7 +44,7 @@ DELIBERATE = {
     "enhancePrompt": "authoring helper, not a runtime call",
 }
 
-RESOURCES = ("agent", "bulk_call", "call", "knowledge_base", "phone_number",
+RESOURCES = ("account", "agent", "bulk_call", "call", "knowledge_base", "phone_number",
              "providers", "reseller", "simulation", "integrations")
 
 CALL = re.compile(r'self\.client\.(get|post|put|patch|delete)\(\s*f?["\']([^"\']*)["\']')

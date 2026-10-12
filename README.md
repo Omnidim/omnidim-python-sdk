@@ -250,6 +250,16 @@ status = client.reseller.kyc_status(user_id=456)
 requirements = client.reseller.kyc_requirements(region="IN", carrier="carrier-1")
 client.reseller.submit_kyc_step(
     step="register", user_id=456, region="IN", carrier="carrier-1", full_name="Jane Doe")
+
+# A step with method "upload" takes a document: a path, bytes, or an open file
+client.reseller.upload_kyc_document(
+    "upload-pan", user_id=456, region="IN", carrier="carrier-2-new",
+    document="pan-card.pdf")
+
+# A step with method "redirect" can bring your client back to your own app
+client.reseller.submit_kyc_step(
+    "verify-aadhaar", user_id=456, region="IN", carrier="carrier-2-new",
+    return_url="https://app.example.com/kyc/done")
 ```
 
 ---

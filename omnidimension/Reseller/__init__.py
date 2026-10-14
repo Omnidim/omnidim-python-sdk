@@ -96,6 +96,161 @@ class Reseller():
         }
         return self.client.post("reseller/users/access-control", data=data)
 
+    def set_client_access(self, blocked, user_id=None, organization_id=None,
+                          detach_numbers=None):
+        """
+        Block or restore a client, reversibly. Nothing is deleted.
+
+        Args:
+            blocked (bool): True to block, False to restore. Must be a real bool.
+            user_id (int): The client user. Send this or organization_id, not both.
+            organization_id (int): A client organization; every user in it is set.
+            detach_numbers (bool): Also detach the organization's numbers from their
+                agents (optional, only with organization_id and blocked=True).
+
+        Returns:
+            dict: Response with user_ids and, when numbers were detached, detached_numbers.
+
+        Raises:
+            ValueError: If blocked is not a bool, or not exactly one of user_id and
+                organization_id is given.
+        """
+        if not isinstance(blocked, bool):
+            raise ValueError("blocked must be True or False.")
+        if (user_id is None) == (organization_id is None):
+            raise ValueError("Send user_id or organization_id, not both and not neither.")
+
+        data = {'blocked': blocked}
+        if user_id is not None:
+            data['user_id'] = user_id
+        if organization_id is not None:
+            data['organization_id'] = organization_id
+        if detach_numbers is not None:
+            data['detach_numbers'] = detach_numbers
+        return self.client.post("reseller/users/access", data=data)
+
+    def get_identity(self):
+        """
+        Read your brand and custom email server settings.
+
+        Returns:
+            dict: Response with has_identity, identity and smtp. The SMTP password
+            is never returned.
+        """
+        return self.client.get("reseller/identity")
+
+    def save_identity(self, company_name=None, platform_name=None, logo_url=None,
+                      primary_color=None, real_email=None):
+        """
+        Set the brand your client organizations see. The first save creates it.
+
+        Args:
+            company_name (str): Company name, 1 to 60 characters of plain text (optional).
+            platform_name (str): Brand name, 1 to 60 characters of plain text (optional).
+            logo_url (str): Public URL of your logo (optional).
+            primary_color (str): Hex colour such as "#1976d2" (optional).
+            real_email (str): Sender and reply-to address on clients' emails (optional).
+
+        Returns:
+            dict: Response containing the full brand state.
+        """
+        data = {}
+        if company_name is not None:
+            data['company_name'] = company_name
+        if platform_name is not None:
+            data['platform_name'] = platform_name
+        if logo_url is not None:
+            data['logo_url'] = logo_url
+        if primary_color is not None:
+            data['primary_color'] = primary_color
+        if real_email is not None:
+            data['real_email'] = real_email
+
+        return self.client.post("reseller/identity/save", data=data)
+
+    def save_identity_smtp(self, host, port, username=None, password=None,
+                           encryption=None, from_email=None):
+        """
+        Send your clients' emails through your own email server. The server is
+        checked with a live login before it is saved. Save your brand first.
+
+        Args:
+            host (str): Email server host name.
+            port (int): Email server port.
+            username (str): Login name (optional).
+            password (str): Login password. Leave out to keep the saved one (optional).
+            encryption (str): "starttls" (default), "ssl" or "none" (optional).
+            from_email (str): Address your clients' emails are sent from (optional).
+
+        Returns:
+            dict: Response containing the full brand state.
+
+        Raises:
+            ValueError: If host or port is not provided.
+        """
+        if not host:
+            raise ValueError("host is required.")
+        if port is None:
+            raise ValueError("port is required.")
+
+        data = {'host': host, 'port': port}
+        if username is not None:
+            data['username'] = username
+        if password is not None:
+            data['password'] = password
+        if encryption is not None:
+            data['encryption'] = encryption
+        if from_email is not None:
+            data['from_email'] = from_email
+
+        return self.client.post("reseller/identity/smtp/save", data=data)
+
+    def test_identity_smtp(self, host, port, username=None, password=None,
+                           encryption=None, from_email=None):
+        """
+        Check a login to an email server. Nothing is saved.
+
+        Args:
+            host (str): Email server host name.
+            port (int): Email server port.
+            username (str): Login name (optional).
+            password (str): Login password. Leave out to test the saved one (optional).
+            encryption (str): "starttls" (default), "ssl" or "none" (optional).
+            from_email (str): Address your clients' emails are sent from (optional).
+
+        Returns:
+            dict: Response with success True when the login works.
+
+        Raises:
+            ValueError: If host or port is not provided.
+        """
+        if not host:
+            raise ValueError("host is required.")
+        if port is None:
+            raise ValueError("port is required.")
+
+        data = {'host': host, 'port': port}
+        if username is not None:
+            data['username'] = username
+        if password is not None:
+            data['password'] = password
+        if encryption is not None:
+            data['encryption'] = encryption
+        if from_email is not None:
+            data['from_email'] = from_email
+
+        return self.client.post("reseller/identity/smtp/test", data=data)
+
+    def disable_identity_smtp(self):
+        """
+        Send your clients' emails back to the default sender. The saved server
+        and its login are kept.
+
+        Returns:
+            dict: Response containing the full brand state.
+        """
+        return self.client.post("reseller/identity/smtp/disable")
+
     def set_expiry(self, user_id, expiry_date=None):
         """
         Set or clear the account expiry date for a child user.

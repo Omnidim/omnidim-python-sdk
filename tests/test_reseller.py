@@ -153,3 +153,62 @@ class TestClientMultipart(unittest.TestCase):
         kwargs = req.call_args.kwargs
         self.assertEqual(kwargs['json'], {'name': 'a'})
         self.assertEqual(kwargs['headers']['Content-Type'], 'application/json')
+
+
+class TestIdentityAndClientAccess(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def sent(self):
+        call = self.client.request.call_args
+        return call.args[0], call.args[1], call.kwargs.get('json_data')
+
+    def test_get_identity(self):
+        self.client.reseller.get_identity()
+        self.assertEqual(self.sent()[:2], ("GET", "reseller/identity"))
+
+    def test_save_identity_sends_only_given_fields(self):
+        self.client.reseller.save_identity(platform_name="Acme Voice", primary_color="#1976d2")
+        method, path, body = self.sent()
+        self.assertEqual((method, path), ("POST", "reseller/identity/save"))
+        self.assertEqual(body, {"platform_name": "Acme Voice", "primary_color": "#1976d2"})
+
+    def test_save_identity_smtp(self):
+        self.client.reseller.save_identity_smtp(
+            host="smtp.acme.example", port=587, username="u", password="p",
+            encryption="ssl", from_email="hello@acme.example")
+        method, path, body = self.sent()
+        self.assertEqual((method, path), ("POST", "reseller/identity/smtp/save"))
+        self.assertEqual(set(body), {"host", "port", "username", "password", "encryption", "from_email"})
+
+    def test_test_identity_smtp_omits_blank_password(self):
+        self.client.reseller.test_identity_smtp(host="smtp.acme.example", port=587, username="u")
+        method, path, body = self.sent()
+        self.assertEqual((method, path), ("POST", "reseller/identity/smtp/test"))
+        self.assertEqual(set(body), {"host", "port", "username"})
+
+    def test_disable_identity_smtp(self):
+        self.client.reseller.disable_identity_smtp()
+        method, path, body = self.sent()
+        self.assertEqual((method, path), ("POST", "reseller/identity/smtp/disable"))
+        self.assertIsNone(body)
+
+    def test_set_client_access_user(self):
+        self.client.reseller.set_client_access(blocked=False, user_id=1234)
+        method, path, body = self.sent()
+        self.assertEqual((method, path), ("POST", "reseller/users/access"))
+        self.assertEqual(body, {"blocked": False, "user_id": 1234})
+
+    def test_set_client_access_organization_with_detach(self):
+        self.client.reseller.set_client_access(
+            blocked=True, organization_id=5678, detach_numbers=True)
+        body = self.sent()[2]
+        self.assertEqual(body, {"blocked": True, "organization_id": 5678, "detach_numbers": True})
+
+    def test_set_client_access_refuses_bad_target_or_blocked(self):
+        with self.assertRaises(ValueError):
+            self.client.reseller.set_client_access(blocked=True)
+        with self.assertRaises(ValueError):
+            self.client.reseller.set_client_access(blocked=True, user_id=1, organization_id=2)
+        with self.assertRaises(ValueError):
+            self.client.reseller.set_client_access(blocked="false", user_id=1)

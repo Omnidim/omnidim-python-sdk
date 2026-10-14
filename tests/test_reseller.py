@@ -212,3 +212,45 @@ class TestIdentityAndClientAccess(unittest.TestCase):
             self.client.reseller.set_client_access(blocked=True, user_id=1, organization_id=2)
         with self.assertRaises(ValueError):
             self.client.reseller.set_client_access(blocked="false", user_id=1)
+
+
+class TestClientRelease(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def test_preview_sends_organization_id(self):
+        self.client.reseller.preview_client_release(5678)
+        method, path = self.client.request.call_args.args
+        params = self.client.request.call_args.kwargs['params']
+        self.assertEqual((method, path), ("GET", "reseller/clients/release-preview"))
+        self.assertEqual(params, {'organization_id': 5678})
+
+    def test_release_requires_organization_id(self):
+        with self.assertRaises(ValueError):
+            self.client.reseller.release_client(None)
+
+    def test_release_sends_organization_id(self):
+        self.client.reseller.release_client(5678)
+        method, path = self.client.request.call_args.args
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertEqual((method, path), ("POST", "reseller/clients/release"))
+        self.assertEqual(body, {'organization_id': 5678})
+
+
+class TestChildApiKeys(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def test_issue_sends_user_and_name(self):
+        self.client.reseller.issue_child_api_key(1234, "n8n")
+        method, path = self.client.request.call_args.args
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertEqual((method, path), ("POST", "reseller/users/api-keys"))
+        self.assertEqual(body, {'user_id': 1234, 'name': 'n8n'})
+
+    def test_revoke_sends_user_and_key_id(self):
+        self.client.reseller.revoke_child_api_key(1234, 0)
+        method, path = self.client.request.call_args.args
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertEqual((method, path), ("POST", "reseller/users/api-keys/revoke"))
+        self.assertEqual(body, {'user_id': 1234, 'api_key_id': 0})

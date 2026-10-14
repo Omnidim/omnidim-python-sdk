@@ -567,3 +567,72 @@ class Reseller():
 
         return self.client.post("reseller/kyc/steps/{}".format(step), data=data,
                                 files={'document': (filename, content)})
+
+    def preview_client_release(self, organization_id):
+        """
+        What releasing a client would do, changing nothing. Call it before
+        release_client. A release is refused while has_live_subscription is
+        true.
+
+        Args:
+            organization_id (int): ID of the client organization.
+
+        Returns:
+            dict: Response with the balance, the share that returns, the
+                numbers and the users.
+        """
+        return self.client.get("reseller/clients/release-preview",
+                               params={'organization_id': organization_id})
+
+    def release_client(self, organization_id):
+        """
+        Release a client for good. One-way: unlike set_client_access, it
+        cannot be undone. It reverts the balance you funded, detaches the
+        client's numbers, takes back the ones you bought, and retires its
+        logins.
+
+        Args:
+            organization_id (int): ID of the client organization.
+
+        Returns:
+            dict: Response summarising what was released.
+
+        Raises:
+            ValueError: If organization_id is not provided.
+        """
+        if organization_id is None:
+            raise ValueError("organization_id is required.")
+        return self.client.post("reseller/clients/release",
+                                data={'organization_id': organization_id})
+
+    def issue_child_api_key(self, user_id, name):
+        """
+        Issue an API key for a user in one of your client organizations. The
+        secret is in this response only; store it now, because no listing
+        shows it again.
+
+        Args:
+            user_id (int): ID of the client user.
+            name (str): Name for the key.
+
+        Returns:
+            dict: Response containing the key secret.
+        """
+        return self.client.post("reseller/users/api-keys",
+                                data={'user_id': user_id, 'name': name})
+
+    def revoke_child_api_key(self, user_id, api_key_id):
+        """
+        Revoke a client's API key. Pass the key's api_key_id, or 0 for the
+        default key every account gets at signup. The key stops working on
+        the next request.
+
+        Args:
+            user_id (int): ID of the client user.
+            api_key_id (int): ID of the key, or 0 for the default key.
+
+        Returns:
+            dict: Response indicating success or failure.
+        """
+        return self.client.post("reseller/users/api-keys/revoke",
+                                data={'user_id': user_id, 'api_key_id': api_key_id})

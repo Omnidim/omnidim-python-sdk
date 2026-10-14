@@ -34,6 +34,7 @@ class Client(object):
         self._phone_number = None
         self._providers = None
         self._reseller = None
+        self._voices = None
         self._simulation = None
         
         # Verify API key format (basic validation)
@@ -222,6 +223,14 @@ class Client(object):
             from .Reseller import Reseller
             self._reseller = Reseller(self)
         return self._reseller
+
+    @property
+    def voices(self):
+        """Get the Voices client."""
+        if self._voices is None:
+            from .Voices import Voices
+            self._voices = Voices(self)
+        return self._voices
 
     @property
     def simulation(self):

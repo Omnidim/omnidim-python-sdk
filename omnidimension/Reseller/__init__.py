@@ -1,6 +1,12 @@
 import os
 
 
+def _usage_window(month, date_from, date_to):
+    """Only the window parts given: the API reads an absent period as this month."""
+    window = {'month': month, 'date_from': date_from, 'date_to': date_to}
+    return {k: v for k, v in window.items() if v is not None}
+
+
 class Reseller():
     def __init__(self, client):
         """
@@ -128,6 +134,39 @@ class Reseller():
         if detach_numbers is not None:
             data['detach_numbers'] = detach_numbers
         return self.client.post("reseller/users/access", data=data)
+
+    def usage(self, month=None, date_from=None, date_to=None):
+        """
+        Usage, spend and margin across all your clients for one period.
+
+        Args:
+            month (str): A calendar month as "YYYY-MM" (optional).
+            date_from (str): First day of a range as "YYYY-MM-DD", with date_to (optional).
+            date_to (str): Last day of a range as "YYYY-MM-DD", with date_from (optional).
+
+        With no period, you get the current month. A range can span at most
+        366 days. Amounts are in USD.
+
+        Returns:
+            dict: Response with totals, pool, business and one row per client.
+        """
+        return self.client.get("reseller/usage",
+                               params=_usage_window(month, date_from, date_to))
+
+    def client_usage(self, organization_id, month=None, date_from=None, date_to=None):
+        """
+        One client's usage statement and your margin on it, for one period.
+
+        Args:
+            organization_id (int): The client organization.
+            month, date_from, date_to: The period, as for usage() (optional).
+
+        Returns:
+            dict: Response with summary, margin, the by_day, by_agent,
+            by_campaign, by_number and by_direction breakdowns, and purchases.
+        """
+        return self.client.get(f"reseller/usage/clients/{organization_id}",
+                               params=_usage_window(month, date_from, date_to))
 
     def get_identity(self):
         """

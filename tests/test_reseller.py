@@ -254,3 +254,21 @@ class TestChildApiKeys(unittest.TestCase):
         body = self.client.request.call_args.kwargs['json_data']
         self.assertEqual((method, path), ("POST", "reseller/users/api-keys/revoke"))
         self.assertEqual(body, {'user_id': 1234, 'api_key_id': 0})
+
+
+class TestUsage(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def test_overview_sends_only_the_window_given(self):
+        self.client.reseller.usage(month="2026-09")
+        args, kwargs = self.client.request.call_args
+        self.assertEqual(args, ("GET", "reseller/usage"))
+        self.assertEqual(kwargs['params'], {'month': '2026-09'})
+
+    def test_client_usage_names_the_client_in_the_path(self):
+        self.client.reseller.client_usage(5678, date_from="2026-09-01", date_to="2026-09-15")
+        args, kwargs = self.client.request.call_args
+        self.assertEqual(args, ("GET", "reseller/usage/clients/5678"))
+        self.assertEqual(kwargs['params'],
+                         {'date_from': '2026-09-01', 'date_to': '2026-09-15'})

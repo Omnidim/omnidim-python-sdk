@@ -48,5 +48,32 @@ class TestPurchase(unittest.TestCase):
         self.assertNotIn('carrier', body)
 
 
+class TestAttachDetach(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def test_attach_forwards_user_id_when_given(self):
+        self.client.phone_number.attach(23, 158910, user_id=42)
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertEqual(body['user_id'], 42)
+        self.assertEqual(body['phone_number_id'], 23)
+        self.assertEqual(body['agent_id'], 158910)
+
+    def test_attach_omits_user_id_by_default(self):
+        self.client.phone_number.attach(23, 158910)
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertNotIn('user_id', body)
+
+    def test_detach_forwards_user_id_when_given(self):
+        self.client.phone_number.detach(23, user_id=42)
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertEqual(body['user_id'], 42)
+
+    def test_detach_omits_user_id_by_default(self):
+        self.client.phone_number.detach(23)
+        body = self.client.request.call_args.kwargs['json_data']
+        self.assertNotIn('user_id', body)
+
+
 if __name__ == '__main__':
     unittest.main()

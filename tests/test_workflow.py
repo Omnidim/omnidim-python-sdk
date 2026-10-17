@@ -22,6 +22,8 @@ class TestWorkflow(unittest.TestCase):
         self.client.workflow.list_node_types(q="whatsapp")
         verb, path, kw = self.sent()
         self.assertEqual((verb, path, kw['params']), ("GET", "workflow-node-types", {'q': 'whatsapp'}))
+        self.client.workflow.list_node_types(category="crm")
+        self.assertEqual(self.sent()[2]['params'], {'category': 'crm'})
 
     def test_get_node_type_and_field_options(self):
         self.client.workflow.get_node_type("send_whatsapp", detail="full")
@@ -48,6 +50,10 @@ class TestWorkflow(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.client.workflow.create("")
 
+    def test_create_omits_graph_when_none(self):
+        self.client.workflow.create("W")
+        self.assertEqual(self.sent()[2]['json_data'], {'name': 'W'})
+
     def test_edit_sends_revision_and_ops(self):
         self.client.workflow.edit(7, "rev1", [{"op": "delete_node", "id": "n1"}])
         verb, path, kw = self.sent()
@@ -55,6 +61,12 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(set(kw['json_data']), {'revision', 'ops'})
         with self.assertRaises(ValueError):
             self.client.workflow.edit(7, "rev1", [])
+
+    def test_edit_sends_name_when_given(self):
+        self.client.workflow.edit(7, "rev1", [{"op": "x"}], name="N", user_id=2)
+        kw = self.sent()[2]
+        self.assertEqual(kw['json_data'], {'revision': 'rev1', 'ops': [{"op": "x"}], 'name': 'N'})
+        self.assertEqual(kw['params'], {'user_id': 2})
 
     def test_action_verbs_and_paths(self):
         wf = self.client.workflow
@@ -70,11 +82,13 @@ class TestWorkflow(unittest.TestCase):
             self.assertEqual((v, p, kw['params']), (verb, path, {'user_id': 2}))
 
     def test_test_run_and_execution(self):
-        self.client.workflow.test(7, payload={"a": 1})
+        self.client.workflow.test(7, payload={"a": 1}, user_id=2)
         verb, path, kw = self.sent()
         self.assertEqual((verb, path, kw['json_data']), ("POST", "workflows/7/test", {'payload': {"a": 1}}))
-        self.client.workflow.get_execution(7, 11)
-        self.assertEqual(self.sent()[:2], ("GET", "workflows/7/executions/11"))
+        self.assertEqual(kw['params'], {'user_id': 2})
+        self.client.workflow.get_execution(7, 11, user_id=2)
+        verb, path, kw = self.sent()
+        self.assertEqual((verb, path, kw['params']), ("GET", "workflows/7/executions/11", {'user_id': 2}))
 
 
 class TestPostCallActionsAndIntegrations(unittest.TestCase):
@@ -89,9 +103,10 @@ class TestPostCallActionsAndIntegrations(unittest.TestCase):
         self.client.agent.list_post_call_actions(4, user_id=2)
         verb, path, kw = self.sent()
         self.assertEqual((verb, path, kw['params']), ("GET", "agents/4/post-call-actions", {'user_id': 2}))
-        self.client.agent.delete_post_call_action(4, "a1")
+        self.client.agent.delete_post_call_action(4, "a1", user_id=2)
         verb, path, kw = self.sent()
-        self.assertEqual((verb, path), ("DELETE", "agents/4/post-call-actions/a1"))
+        self.assertEqual((verb, path, kw['params']),
+                         ("DELETE", "agents/4/post-call-actions/a1", {'user_id': 2}))
 
     def test_add_sends_type_fields_and_idempotency_header(self):
         self.client.agent.add_post_call_action(4, "webhook", idempotency_key="k1", url="https://x.io")
@@ -99,14 +114,17 @@ class TestPostCallActionsAndIntegrations(unittest.TestCase):
         self.assertEqual((verb, path), ("POST", "agents/4/post-call-actions"))
         self.assertEqual(kw['json_data'], {'type': 'webhook', 'url': 'https://x.io'})
         self.assertEqual(kw['headers']['Idempotency-Key'], 'k1')
+        self.client.agent.add_post_call_action(4, "webhook", url="https://x.io")
+        self.assertIsNone(self.sent()[2]['headers'])
         with self.assertRaises(ValueError):
             self.client.agent.add_post_call_action(4, "")
 
     def test_update_sends_only_given_fields(self):
-        self.client.agent.update_post_call_action(4, "a1", url="https://y.io")
+        self.client.agent.update_post_call_action(4, "a1", url="https://y.io", user_id=2)
         verb, path, kw = self.sent()
         self.assertEqual((verb, path, kw['json_data']),
-                         ("PATCH", "agents/4/post-call-actions/a1", {'url': 'https://y.io'}))
+                         ("PATCH", "agents/4/post-call-actions/a1", {'url': 'https://y.io', 'user_id': 2}))
+        self.assertFalse(kw['params'])
 
     def test_integrations_user_id_optional(self):
         self.client.integrations.get_user_integrations()

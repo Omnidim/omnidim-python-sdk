@@ -57,14 +57,19 @@ class Integrations():
             }
         }
 
-    def get_user_integrations(self):
+    def get_user_integrations(self, user_id=None):
         """
         Get all integrations available for the authenticated user.
-        
+
+        Args:
+            user_id (int): Reseller accounts only, names the client to act on.
+                Omit it to act on your own account (optional).
+
         Returns:
             dict: Response containing the list of integrations.
         """
-        return self.client.get("integrations")
+        params = {'user_id': user_id} if user_id is not None else None
+        return self.client.get("integrations", params=params)
         
     @staticmethod
     def _validate_integration_params(params_list, param_type):

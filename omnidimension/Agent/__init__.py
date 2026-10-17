@@ -273,3 +273,78 @@ class Agent():
         if note is not None: data["note"] = note
 
         return self.client.patch(f"agents/{agent_id}/versions/{version_number}", data=data)
+
+    def list_post_call_actions(self, agent_id, user_id=None):
+        """
+        List the post-call actions of an agent.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            user_id (int): Reseller accounts only, names the client to act on.
+                Omit it to act on your own account (optional).
+
+        Returns:
+            dict: Response containing the post-call actions.
+        """
+        params = {'user_id': user_id} if user_id is not None else None
+        return self.client.get(f"agents/{agent_id}/post-call-actions", params=params)
+
+    def add_post_call_action(self, agent_id, type, idempotency_key=None, **fields):
+        """
+        Add one post-call action to an agent. The agent's other actions are not changed.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            type (str): The channel: email, webhook, omni_crm, cloud_whatsapp, workflow,
+                google_sheets, slack, salesforce, hubspot or zoho_bigin.
+            idempotency_key (str): Any unique string. A retry with the same key and
+                body adds nothing new (optional).
+            **fields: The fields of that channel and the shared ones, such as
+                recipients, url, integration_id, include, extracted_variables,
+                trigger_call_statuses or user_id (reseller accounts only).
+
+        Returns:
+            dict: Response containing the added action.
+
+        Raises:
+            ValueError: If type is not provided.
+        """
+        if not type:
+            raise ValueError("type is required.")
+
+        data = {'type': type, **fields}
+        headers = {"Idempotency-Key": idempotency_key} if idempotency_key else None
+        return self.client.post(f"agents/{agent_id}/post-call-actions", data=data, headers=headers)
+
+    def update_post_call_action(self, agent_id, action_id, **fields):
+        """
+        Update a post-call action. Send only the fields to change. The type cannot
+        change: delete the action and add a new one.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            action_id (str): The ID of the action.
+            **fields: The fields to change, such as recipients, url, include,
+                extracted_variables, trigger_call_statuses or user_id
+                (reseller accounts only).
+
+        Returns:
+            dict: Response containing the updated action.
+        """
+        return self.client.patch(f"agents/{agent_id}/post-call-actions/{action_id}", data=fields)
+
+    def delete_post_call_action(self, agent_id, action_id, user_id=None):
+        """
+        Delete a post-call action.
+
+        Args:
+            agent_id (int): The ID of the agent.
+            action_id (str): The ID of the action.
+            user_id (int): Reseller accounts only, names the client to act on.
+                Omit it to act on your own account (optional).
+
+        Returns:
+            dict: Response indicating success or failure.
+        """
+        params = {'user_id': user_id} if user_id is not None else None
+        return self.client.delete(f"agents/{agent_id}/post-call-actions/{action_id}", params=params)

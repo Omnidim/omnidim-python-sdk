@@ -30,6 +30,7 @@ class Client(object):
         self._bulk_call = None
         self._call = None
         self._integrations = None
+        self._workflow = None
         self._knowledge_base = None
         self._phone_number = None
         self._providers = None
@@ -239,3 +240,11 @@ class Client(object):
             from .Simulation import Simulation
             self._simulation = Simulation(self)
         return self._simulation
+
+    @property
+    def workflow(self):
+        """Get the Workflow client."""
+        if self._workflow is None:
+            from .Workflow import Workflow
+            self._workflow = Workflow(self)
+        return self._workflow

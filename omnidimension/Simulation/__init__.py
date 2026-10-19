@@ -272,6 +272,38 @@ class Simulation():
 
         return self.client.post(f"simulations/{simulation_id}/enhance-prompt")
 
+    def apply_enhanced_prompt(self, simulation_id):
+        """
+        Rewrite the agent's prompt sections from a completed simulation's
+        suggestions. The agent's current sections are replaced.
+
+        Args:
+            simulation_id (int): The ID of the completed simulation.
+
+        Returns:
+            dict: Response containing the agent_id whose prompt changed.
+        """
+        if not isinstance(simulation_id, int):
+            raise ValueError("Simulation ID must be an integer.")
+
+        return self.client.post(f"simulations/{simulation_id}/apply-enhanced-prompt")
+
+    def generate_scenarios(self, agent_id, number_of_scenarios):
+        """
+        Write test scenarios for an agent from its prompt. Nothing is saved:
+        pass the ones you want to create().
+
+        Args:
+            agent_id (int): The ID of the agent.
+            number_of_scenarios (int): How many scenarios to write.
+
+        Returns:
+            dict: Response containing the scenarios, each with name,
+                description and expected_result.
+        """
+        return self.client.post(f"agents/{agent_id}/auto-scenarios",
+                                data={"number_of_scenarios": number_of_scenarios})
+
     
     @staticmethod
     def _validate_scenarios(scenarios, allow_id=False):

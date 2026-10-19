@@ -45,7 +45,7 @@ DELIBERATE = {
 }
 
 RESOURCES = ("account", "agent", "bulk_call", "call", "knowledge_base", "phone_number",
-             "providers", "reseller", "simulation", "integrations", "voices", "workflow")
+             "providers", "reseller", "simulation", "integrations", "voices", "workflow", "whatsapp")
 
 CALL = re.compile(r'self\.client\.(get|post|put|patch|delete)\(\s*f?["\']([^"\']*)["\']')
 DICT_KEY = re.compile(r'["\']([a-zA-Z_][a-zA-Z0-9_]*)["\']\s*:')

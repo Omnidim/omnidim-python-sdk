@@ -37,7 +37,8 @@ class Client(object):
         self._reseller = None
         self._voices = None
         self._simulation = None
-        
+        self._whatsapp = None
+
         # Verify API key format (basic validation)
         if not isinstance(api_key, str) or len(api_key.strip()) < 8:
             raise ValueError("API key appears to be invalid. Please check your credentials.")
@@ -240,6 +241,14 @@ class Client(object):
             from .Simulation import Simulation
             self._simulation = Simulation(self)
         return self._simulation
+
+    @property
+    def whatsapp(self):
+        """Get the WhatsApp client."""
+        if self._whatsapp is None:
+            from .WhatsApp import WhatsApp
+            self._whatsapp = WhatsApp(self)
+        return self._whatsapp
 
     @property
     def workflow(self):

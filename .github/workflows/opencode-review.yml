@@ -1,0 +1,39 @@
+name: OpenCode review
+
+# Advisory review of every PR into main, and answers to "/oc <question>" comments, by OpenCode on
+# a GitHub-hosted runner (this repo is public). The scripts live in the pinned action, so a fix there is a pin bump here.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  # Comments run from the default branch with secrets. Safe here: the action's code comes from its
+  # pinned ref, it checks the commenter is a member, refuses fork PRs, and the model can only read.
+  issue_comment: # zizmor: ignore[dangerous-triggers]
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions: {}
+
+# A new push cancels the review of the old commit. Questions each get their own run.
+concurrency:
+  group: >-
+    opencode-review-${{ github.event_name == 'pull_request'
+    && format('pr-{0}', github.event.pull_request.number)
+    || format('comment-{0}', github.event.comment.id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  opencode:
+    if: github.event_name == 'pull_request' || startsWith(github.event.comment.body, '/oc')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: aloki-alok/opencode-review@dede117713a8dd30f7cd2de842eca901d50cae81 # v0.1.2
+        with:
+          model: openrouter/deepseek/deepseek-v4.1-flash
+          api-key: ${{ secrets.OPENROUTER_API_KEY }}

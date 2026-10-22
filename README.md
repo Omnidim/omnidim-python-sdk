@@ -441,3 +441,5 @@ Visit [omnidim.io](https://www.omnidim.io/) to explore the full platform, UI bui
 - Bugs and feature requests: [open an issue](https://github.com/Omnidim/omnidim-python-sdk/issues).
 - Account or billing: [support@omnidim.io](mailto:support@omnidim.io).
 
+
+Built by [Alok Ranjan](https://alokranjan.me/).

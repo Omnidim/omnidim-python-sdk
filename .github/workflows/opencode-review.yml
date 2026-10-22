@@ -35,5 +35,5 @@ jobs:
     steps:
       - uses: aloki-alok/opencode-review@dede117713a8dd30f7cd2de842eca901d50cae81 # v0.1.2
         with:
-          model: openrouter/deepseek/deepseek-v4.1-flash
+          model: openrouter/deepseek/deepseek-v4.1-flash-1017
           api-key: ${{ secrets.OPENROUTER_API_KEY }}

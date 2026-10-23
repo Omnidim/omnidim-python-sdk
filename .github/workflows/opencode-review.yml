@@ -33,7 +33,7 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - uses: aloki-alok/opencode-review@dede117713a8dd30f7cd2de842eca901d50cae81 # v0.1.2
+      - uses: aloki-alok/opencode-review@364a8d22e849d6c355ec64a6c02dba4250c0458c # v0.1.3
         with:
           model: openrouter/deepseek/deepseek-v4.1-flash-1017
           api-key: ${{ secrets.OPENROUTER_API_KEY }}

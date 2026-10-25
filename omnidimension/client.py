@@ -11,19 +11,21 @@ class APIError(Exception):
         super().__init__(f"API Error ({status_code}): {message}")
 
 class Client(object):
-    def __init__(self, api_key, base_url='https://backend.omnidim.io/api/v1'):
+    def __init__(self, api_key, base_url='https://backend.omnidim.io/api/v1', timeout=60.0):
         """
-        Initialize the OmniClient with API key and base URL.
+        Initialize the OmniClient with API key, base URL, and request timeout.
 
         Args:
             api_key (str): The API key for authentication.
             base_url (str): The base URL of the API.
+            timeout (float, optional): Per-request timeout in seconds. Defaults to 60.0.
         """
         if not api_key:
             raise ValueError("API key is required.")
         
         self.api_key = api_key
         self.base_url = base_url.rstrip('/')
+        self.timeout = timeout
         # Lazy-loaded domain clients
         self._account = None
         self._agent = None
@@ -44,7 +46,7 @@ class Client(object):
             raise ValueError("API key appears to be invalid. Please check your credentials.")
 
     def request(self, method, endpoint, params=None, headers=None, data=None, json_data=None,
-                files=None):
+                files=None, timeout=None):
         """
         Universal request method to handle all API requests.
 
@@ -87,7 +89,8 @@ class Client(object):
                 headers=headers,
                 data=data,
                 json=json_data,
-                files=files
+                files=files,
+                timeout=timeout if timeout is not None else self.timeout
             )
             
             # Check for HTTP errors
@@ -111,7 +114,16 @@ class Client(object):
             
             try:
                 error_data = e.response.json()
-                error_message = error_data.get('error_description', error_data.get('error', str(e)))
+                if isinstance(error_data, dict):
+                    error_message = (
+                        error_data.get('error_description')
+                        or error_data.get('error')
+                        or error_data.get('detail')
+                        or error_data.get('message')
+                        or str(e)
+                    )
+                else:
+                    error_message = str(error_data) if error_data else str(e)
             except (ValueError, AttributeError, KeyError):
                 error_message = str(e)
                 

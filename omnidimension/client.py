@@ -1,5 +1,7 @@
 import requests
 import json
+import platform
+import sys
 from importlib.metadata import PackageNotFoundError, version
 from urllib.parse import urljoin
 
@@ -7,6 +9,16 @@ try:
     _SDK_VERSION = version('omnidimension')
 except PackageNotFoundError:
     _SDK_VERSION = 'unknown'
+
+# Computed once. Only language, runtime, OS and CPU type: nothing that names the machine or user.
+_CLIENT_INFO = {
+    'X-OmniDimension-Lang': 'python',
+    'X-OmniDimension-Runtime': platform.python_implementation().lower(),
+    'X-OmniDimension-Runtime-Version': platform.python_version(),
+    'X-OmniDimension-OS': sys.platform.replace('win32', 'windows'),
+    'X-OmniDimension-Arch': {'x86_64': 'x64', 'amd64': 'x64', 'aarch64': 'arm64'}.get(
+        platform.machine().lower(), platform.machine().lower()),
+}
 
 
 class APIError(Exception):
@@ -80,6 +92,8 @@ class Client(object):
         headers.setdefault('Authorization', f'Bearer {self.api_key}')
         # nginx logs count API traffic by SDK and version from this header.
         headers.setdefault('User-Agent', f'OmniDimension-python-sdk/{_SDK_VERSION}')
+        for name, value in _CLIENT_INFO.items():
+            headers.setdefault(name, value)
         # A multipart body needs the boundary header requests writes itself.
         if not files:
             headers.setdefault('Content-Type', 'application/json')

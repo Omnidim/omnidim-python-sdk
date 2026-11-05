@@ -23,11 +23,14 @@ _CLIENT_INFO = {
 
 class APIError(Exception):
     """Exception raised for API errors."""
-    def __init__(self, status_code, message, response=None):
+    def __init__(self, status_code, message, response=None, request_id=None):
         self.status_code = status_code
         self.message = message
         self.response = response
-        super().__init__(f"API Error ({status_code}): {message}")
+        # The server's id for this request, quote it to support. Never made up here.
+        self.request_id = request_id
+        suffix = f" (request id: {request_id})" if request_id else ""
+        super().__init__(f"API Error ({status_code}): {message}{suffix}")
 
 class Client(object):
     def __init__(self, api_key, base_url='https://backend.omnidim.io/api/v1'):
@@ -138,10 +141,14 @@ class Client(object):
             except (ValueError, AttributeError, KeyError):
                 error_message = str(e)
                 
+            body = error_data if isinstance(error_data, dict) else {}
+            request_id = (e.response.headers.get('X-Request-Id')
+                          or body.get('request_id') or body.get('ref'))
             raise APIError(
                 status_code=e.response.status_code,
                 message=error_message,
-                response=error_data
+                response=error_data,
+                request_id=request_id
             )
             
         except requests.exceptions.RequestException as e:

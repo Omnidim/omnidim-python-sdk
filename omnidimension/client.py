@@ -1,6 +1,13 @@
 import requests
 import json
+from importlib.metadata import PackageNotFoundError, version
 from urllib.parse import urljoin
+
+try:
+    _SDK_VERSION = version('omnidimension')
+except PackageNotFoundError:
+    _SDK_VERSION = 'unknown'
+
 
 class APIError(Exception):
     """Exception raised for API errors."""
@@ -71,6 +78,8 @@ class Client(object):
         
         # Add authorization header
         headers.setdefault('Authorization', f'Bearer {self.api_key}')
+        # nginx logs count API traffic by SDK and version from this header.
+        headers.setdefault('User-Agent', f'OmniDimension-python-sdk/{_SDK_VERSION}')
         # A multipart body needs the boundary header requests writes itself.
         if not files:
             headers.setdefault('Content-Type', 'application/json')

@@ -1,14 +1,36 @@
 import requests
 import json
+import platform
+import sys
+from importlib.metadata import PackageNotFoundError, version
 from urllib.parse import urljoin
+
+try:
+    _SDK_VERSION = version('omnidimension')
+except PackageNotFoundError:
+    _SDK_VERSION = 'unknown'
+
+# Computed once. Only language, runtime, OS and CPU type: nothing that names the machine or user.
+_CLIENT_INFO = {
+    'X-OmniDimension-Lang': 'python',
+    'X-OmniDimension-Runtime': platform.python_implementation().lower(),
+    'X-OmniDimension-Runtime-Version': platform.python_version(),
+    'X-OmniDimension-OS': sys.platform.replace('win32', 'windows'),
+    'X-OmniDimension-Arch': {'x86_64': 'x64', 'amd64': 'x64', 'aarch64': 'arm64'}.get(
+        platform.machine().lower(), platform.machine().lower()),
+}
+
 
 class APIError(Exception):
     """Exception raised for API errors."""
-    def __init__(self, status_code, message, response=None):
+    def __init__(self, status_code, message, response=None, request_id=None):
         self.status_code = status_code
         self.message = message
         self.response = response
-        super().__init__(f"API Error ({status_code}): {message}")
+        # The server's id for this request, quote it to support. Never made up here.
+        self.request_id = request_id
+        suffix = f" (request id: {request_id})" if request_id else ""
+        super().__init__(f"API Error ({status_code}): {message}{suffix}")
 
 class Client(object):
     def __init__(self, api_key, base_url='https://backend.omnidim.io/api/v1'):
@@ -71,6 +93,10 @@ class Client(object):
         
         # Add authorization header
         headers.setdefault('Authorization', f'Bearer {self.api_key}')
+        # nginx logs count API traffic by SDK and version from this header.
+        headers.setdefault('User-Agent', f'OmniDimension-python-sdk/{_SDK_VERSION}')
+        for name, value in _CLIENT_INFO.items():
+            headers.setdefault(name, value)
         # A multipart body needs the boundary header requests writes itself.
         if not files:
             headers.setdefault('Content-Type', 'application/json')
@@ -115,10 +141,14 @@ class Client(object):
             except (ValueError, AttributeError, KeyError):
                 error_message = str(e)
                 
+            body = error_data if isinstance(error_data, dict) else {}
+            request_id = (e.response.headers.get('X-Request-Id')
+                          or body.get('request_id') or body.get('ref'))
             raise APIError(
                 status_code=e.response.status_code,
                 message=error_message,
-                response=error_data
+                response=error_data,
+                request_id=request_id
             )
             
         except requests.exceptions.RequestException as e:

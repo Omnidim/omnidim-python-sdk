@@ -78,6 +78,21 @@ print(agents)
 
 ---
 
+## What the SDK sends
+
+Every request carries these headers so we can see which SDK versions and platforms use the API. They name no machine, user or path. You can override any of them by passing your own header.
+
+| Header | Meaning | Example |
+|---|---|---|
+| `User-Agent` | SDK name and version | `OmniDimension-python-sdk/0.6.0` |
+| `X-OmniDimension-Lang` | SDK language | `python` |
+| `X-OmniDimension-Runtime` | Python implementation | `cpython` |
+| `X-OmniDimension-Runtime-Version` | Python version | `3.11.9` |
+| `X-OmniDimension-OS` | Operating system | `linux`, `darwin`, `windows` |
+| `X-OmniDimension-Arch` | CPU type | `x64`, `arm64` |
+
+When the server sends a request id, `APIError.request_id` holds it and the error message ends with `(request id: ...)`. Quote it when you contact support.
+
 ## 🛰️ MCP server
 
 The OmniDimension MCP server lives in its own repositories, not in this SDK. Pick whichever fits your client.

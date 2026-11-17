@@ -84,7 +84,7 @@ Every request carries these headers so we can see which SDK versions and platfor
 
 | Header | Meaning | Example |
 |---|---|---|
-| `User-Agent` | SDK name and version | `omnidim-python-sdk/0.6.0` |
+| `User-Agent` | SDK name and version | `omnidim-python-sdk/0.7.0` |
 | `X-OmniDimension-Lang` | SDK language | `python` |
 | `X-OmniDimension-Runtime` | Python implementation | `cpython` |
 | `X-OmniDimension-Runtime-Version` | Python version | `3.11.9` |

@@ -1,4 +1,5 @@
 import unittest
+from importlib.metadata import version
 from unittest.mock import Mock, patch
 
 from omnidimension import Client
@@ -14,8 +15,11 @@ def sent_headers(**kwargs):
 
 
 class TestUserAgent(unittest.TestCase):
-    def test_sdk_identifies_itself(self):
-        self.assertRegex(sent_headers()['User-Agent'], r'^OmniDimension-python-sdk/\S+$')
+    def test_sdk_identifies_itself_with_the_installed_version(self):
+        # The backend labels API traffic by this exact name.
+        self.assertEqual(
+            sent_headers()['User-Agent'], f'omnidim-python-sdk/{version("omnidimension")}'
+        )
 
     def test_caller_can_override(self):
         self.assertEqual(sent_headers(headers={'User-Agent': 'mine'})['User-Agent'], 'mine')

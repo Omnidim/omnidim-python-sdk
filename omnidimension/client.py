@@ -94,7 +94,7 @@ class Client(object):
         # Add authorization header
         headers.setdefault('Authorization', f'Bearer {self.api_key}')
         # nginx logs count API traffic by SDK and version from this header.
-        headers.setdefault('User-Agent', f'OmniDimension-python-sdk/{_SDK_VERSION}')
+        headers.setdefault('User-Agent', f'omnidim-python-sdk/{_SDK_VERSION}')
         for name, value in _CLIENT_INFO.items():
             headers.setdefault(name, value)
         # A multipart body needs the boundary header requests writes itself.

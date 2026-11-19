@@ -75,5 +75,24 @@ class TestAttachDetach(unittest.TestCase):
         self.assertNotIn('user_id', body)
 
 
+
+class TestAutoRenew(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def test_switches_auto_renew(self):
+        self.client.phone_number.set_auto_renew('+14155550123', False)
+        self.client.request.assert_called_once_with(
+            "POST", "phone_number/auto_renew", params=None, headers=None,
+            json_data={'phone_number': '+14155550123', 'auto_renew': False})
+
+    def test_reseller_names_the_client(self):
+        self.client.phone_number.set_auto_renew('+14155550123', True, user_id=42)
+        self.assertEqual(self.client.request.call_args.kwargs['json_data']['user_id'], 42)
+
+    def test_rejects_a_non_bool(self):
+        with self.assertRaises(ValueError):
+            self.client.phone_number.set_auto_renew('+14155550123', 'yes')
+
 if __name__ == '__main__':
     unittest.main()

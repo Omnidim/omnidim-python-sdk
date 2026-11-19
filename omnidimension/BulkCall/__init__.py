@@ -386,6 +386,42 @@ class BulkCall():
         return self.client.put(f"calls/bulk_call/{bulk_call_id}/numbers/{assignment_id}",
                                data={'is_active': is_active})
 
+    def set_rotation(self, bulk_call_id, strategy=None, calls_per_number=None,
+                     health_threshold=None, fallback=None,
+                     call_back_from_different_number=None,
+                     skip_known_invalid_numbers=None, user_id=None):
+        """
+        Change how a campaign rotates its phone numbers. Only the settings you pass change.
+
+        Args:
+            bulk_call_id (int): ID of the bulk call campaign.
+            strategy (str, optional): fixed_count, cpr_threshold, both or none.
+            calls_per_number (int, optional): Calls a number makes before the next one takes over.
+            health_threshold (float, optional): Health score below which a number is rested.
+            fallback (str, optional): pause or continue_best, when no number is healthy.
+            call_back_from_different_number (bool, optional): Retry a contact from another number.
+            skip_known_invalid_numbers (bool, optional): Skip contacts already known to be invalid.
+            user_id (int, optional): Reseller accounts only, names the client to act on.
+
+        Returns:
+            dict: Response containing the updated rotation settings.
+
+        Raises:
+            ValueError: If no setting is given.
+        """
+        settings = {
+            'strategy': strategy, 'calls_per_number': calls_per_number,
+            'health_threshold': health_threshold, 'fallback': fallback,
+            'call_back_from_different_number': call_back_from_different_number,
+            'skip_known_invalid_numbers': skip_known_invalid_numbers,
+        }
+        data = {k: v for k, v in settings.items() if v is not None}
+        if not data:
+            raise ValueError("Pass at least one rotation setting to change.")
+        if user_id is not None:
+            data['user_id'] = user_id
+        return self.client.put(f"calls/bulk_call/{bulk_call_id}/rotation", data=data)
+
     def set_daily_time_control(self, bulk_call_id, enable_daily_hard_stop,
                                enable_daily_auto_start, daily_stop_time=None,
                                daily_stop_timezone=None, daily_start_time=None,

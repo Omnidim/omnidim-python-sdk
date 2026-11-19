@@ -210,5 +210,25 @@ class TestRotationNumbers(unittest.TestCase):
             self.client.bulk_call.set_rotation_number_active(123, 456, "yes")
 
 
+class TestRotationSettings(unittest.TestCase):
+    def setUp(self):
+        self.client = make_client()
+
+    def test_sends_only_the_settings_given(self):
+        self.client.bulk_call.set_rotation(123, strategy='fixed_count', calls_per_number=50)
+        self.client.request.assert_called_once_with(
+            "PUT", "calls/bulk_call/123/rotation", params=None, headers=None,
+            json_data={'strategy': 'fixed_count', 'calls_per_number': 50})
+
+    def test_reseller_names_the_client(self):
+        self.client.bulk_call.set_rotation(123, fallback='pause', user_id=42)
+        self.assertEqual(self.client.request.call_args.kwargs['json_data'],
+                         {'fallback': 'pause', 'user_id': 42})
+
+    def test_refuses_an_empty_change(self):
+        with self.assertRaises(ValueError):
+            self.client.bulk_call.set_rotation(123)
+
+
 if __name__ == '__main__':
     unittest.main()

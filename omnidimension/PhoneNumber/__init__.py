@@ -133,6 +133,30 @@ class PhoneNumber():
             data['user_id'] = user_id
         return self.client.post("phone_number/release", data=data)
 
+    def set_auto_renew(self, phone_number, auto_renew, user_id=None):
+        """
+        Switch auto-renew on or off for a purchased phone number.
+
+        Args:
+            phone_number (str): The phone number, in E.164 form.
+            auto_renew (bool): Whether the number renews at the end of its term.
+            user_id (int, optional): Reseller accounts only, names the client to act on.
+
+        Returns:
+            dict: Response containing the number's auto-renew state.
+
+        Raises:
+            ValueError: If phone_number is missing or auto_renew is not a boolean.
+        """
+        if not phone_number:
+            raise ValueError("phone_number is required.")
+        if not isinstance(auto_renew, bool):
+            raise ValueError("auto_renew must be a boolean")
+        data = {'phone_number': phone_number, 'auto_renew': auto_renew}
+        if user_id is not None:
+            data['user_id'] = user_id
+        return self.client.post("phone_number/auto_renew", data=data)
+
     def attach(self, phone_number_id, agent_id, user_id=None):
         """
         Attach a phone number to an agent.

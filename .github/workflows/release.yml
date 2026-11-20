@@ -1,9 +1,12 @@
 name: Release Python SDK
 
+# release-please keeps one release PR open with the next version and changelog.
+# Merging it tags X.Y.Z, and the build and publish run in this same workflow:
+# a tag made with this workflow's token starts no new run, and PyPI's trusted
+# publisher is bound to this file, so it cannot move to a reusable workflow.
 on:
   push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+    branches: [main]
   workflow_dispatch:
     inputs:
       tag:
@@ -14,13 +17,33 @@ on:
 permissions:
   contents: read
 
-env:
-  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-
 jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-please
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.rp.outputs.release_created }}
+      tag: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+
   build:
     name: Build distributions
+    needs: release-please
+    # A manual run skips release-please, so run on that or on a new release.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.created == 'true') }}
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || needs.release-please.outputs.tag }}
+    outputs:
+      tag: ${{ env.RELEASE_TAG }}
     steps:
       - name: Check out release tag
         uses: actions/checkout@v4
@@ -57,6 +80,7 @@ jobs:
 
   check-pypi:
     name: Check PyPI publication
+    needs: build
     runs-on: ubuntu-latest
     outputs:
       already_published: ${{ steps.release.outputs.already_published }}
@@ -64,7 +88,7 @@ jobs:
       - name: Check whether this version is already on PyPI
         id: release
         env:
-          PACKAGE_VERSION: ${{ env.RELEASE_TAG }}
+          PACKAGE_VERSION: ${{ needs.build.outputs.tag }}
         run: |
           if curl --fail --silent --show-error "https://pypi.org/pypi/omnidimension/${PACKAGE_VERSION}/json" > /dev/null; then
             echo "already_published=true" >> "$GITHUB_OUTPUT"
@@ -118,14 +142,16 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ env.RELEASE_TAG }}
+          TAG_NAME: ${{ needs.build.outputs.tag }}
           # This job only downloads the built artifact, it never checks the
           # repo out, so `gh` has no git remote to infer the target from and
           # died with "not a git repository". Naming it explicitly is cheaper
           # than a checkout we would otherwise not need.
           GH_REPO: ${{ github.repository }}
         run: |
+          # release-please writes the release and its notes; attach the files.
           if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            gh release upload "$TAG_NAME" dist/* --clobber
             exit 0
           fi
           gh release create "$TAG_NAME" dist/* --generate-notes --title "$TAG_NAME"

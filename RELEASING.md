@@ -1,24 +1,20 @@
 # Releasing
 
-Releases are created from an immutable version tag. The tag must exactly match
-the version in `setup.py`.
+Do not edit the version in `setup.py` or `CHANGELOG.md` by hand. release-please
+writes both from pull request titles.
 
-Before the first automated PyPI release, configure a trusted publisher for the
-`omnidimension` project on PyPI:
+1. Give each pull request a conventional commit title. Pull requests are
+   squash-merged, so the title becomes the changelog line. `feat:` lands under
+   Added, `fix:` under Fixed, and `perf:` under Changed. `ci`, `test`, `build`,
+   `docs` and `chore` stay out of the changelog. The `pr-title` check rejects
+   other formats.
+2. After each merge to `main`, release-please updates one open release pull
+   request, `chore(main): release X.Y.Z`, with the next version and changelog.
+3. A member of the approvers team merges the release pull request. The
+   `release.yml` run on that merge tags `X.Y.Z` (no `v`), builds and checks the
+   distributions, publishes them to PyPI, and attaches them to the GitHub
+   Release.
 
-- Owner: `Omnidim`
-- Repository: `omnidim-python-sdk`
-- Workflow: `.github/workflows/release.yml`
-- Environment: `pypi`
-
-To release a new version:
-
-1. Update the version in `setup.py` and merge it to `main`.
-2. Create and push the matching tag, for example `0.2.20`.
-3. The release workflow builds and validates the distributions, publishes the
-   version to PyPI, and creates the GitHub Release with the distributions
-   attached.
-
-The workflow does not republish a version that is already on PyPI. This lets a
-missing GitHub Release be reconciled safely without replacing the PyPI files.
-Use **Run workflow** with the existing tag to reconcile one of those releases.
+PyPI trusts `release.yml` in the `pypi` environment of `Omnidim/omnidim-python-sdk`,
+so there is no PyPI token. The workflow skips a version that is already on PyPI.
+To attach missing files to an existing release, use **Run workflow** with that tag.

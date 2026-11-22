@@ -1,2 +1,1 @@
-# Release PRs bump this file. Only the approvers team merges them.
-/.release-please-manifest.json @Omnidim/approvers
+/.release-please-manifest.json @Omnidim/maintainers

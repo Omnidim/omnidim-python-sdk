@@ -10,7 +10,7 @@ writes both from pull request titles.
    other formats.
 2. After each merge to `main`, release-please updates one open release pull
    request, `chore(main): release X.Y.Z`, with the next version and changelog.
-3. A member of the approvers team merges the release pull request. The
+3. A member of the public-release-approvers team approves and merges the release pull request. The
    `release.yml` run on that merge tags `X.Y.Z` (no `v`), builds and checks the
    distributions, publishes them to PyPI, and attaches them to the GitHub
    Release.
